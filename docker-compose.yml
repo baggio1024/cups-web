@@ -1,0 +1,11 @@
+services:
+  cups-epson-l380:
+    build: .
+    container_name: cups-epson-l380
+    ports:
+      - "631:631"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ./etc:/etc/cups
+    restart: unless-stopped
