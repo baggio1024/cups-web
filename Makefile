@@ -1,4 +1,4 @@
-FRONTEND_DIR := web
+FRONTEND_DIR := frontend
 BINARY := bin/cups-web
 
 .PHONY: all frontend build clean docker-build
