@@ -35,6 +35,8 @@ func main() {
     api.HandleFunc("/login", LoginHandler).Methods("POST")
     api.HandleFunc("/logout", LogoutHandler).Methods("POST")
     api.HandleFunc("/csrf", CSRFHandler).Methods("GET")
+    // session endpoint used by frontend to detect existing session on page load
+    api.HandleFunc("/session", SessionHandler).Methods("GET")
 
     protected := api.PathPrefix("").Subrouter()
     protected.Use(middleware.RequireSession)

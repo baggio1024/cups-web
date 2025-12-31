@@ -2,22 +2,22 @@
   <div class="flex items-center justify-center min-h-screen bg-base-200 p-6">
     <div class="card w-full max-w-md bg-base-100 shadow-md">
       <div class="card-body">
-        <h2 class="card-title">Login</h2>
+        <h2 class="card-title">登录</h2>
         <form @submit.prevent="login" class="space-y-4">
           <div>
             <label class="label">
-              <span class="label-text">Username</span>
+              <span class="label-text">用户名</span>
             </label>
             <input class="input input-bordered w-full" v-model="username" />
           </div>
           <div>
             <label class="label">
-              <span class="label-text">Password</span>
+              <span class="label-text">密码</span>
             </label>
             <input type="password" class="input input-bordered w-full" v-model="password" />
           </div>
           <div class="flex items-center justify-between">
-            <button class="btn btn-primary" type="submit">Login</button>
+            <button class="btn btn-primary" type="submit">登录</button>
             <div v-if="error" class="text-error">{{ error }}</div>
           </div>
         </form>
@@ -40,7 +40,7 @@ export default {
           credentials: 'include'
         })
         if (!resp.ok) {
-          this.error = 'Login failed'
+          this.error = '登录失败'
           return
         }
         this.$emit('login-success')

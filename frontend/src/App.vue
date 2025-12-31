@@ -1,7 +1,8 @@
 <template>
-  <div>
-    <h1>CUPS Web</h1>
-    <component :is="view" @login-success="onLogin" />
+  <div class="flex items-center">
+    <h1>CUPS 打印</h1>
+    <button v-if="view === 'PrintView'" class="btn btn-sm btn-outline ml-4" @click="logout">登出</button>
+    <component :is="view" @login-success="onLogin" @logout="onLogout" />
   </div>
 </template>
 
@@ -13,10 +14,32 @@ export default {
   data() {
     return { view: 'LoginView' }
   },
+  async mounted() {
+    // check existing session on page load; if session present, go straight to PrintView
+    try {
+      const resp = await fetch('/api/session', { credentials: 'include' })
+      if (resp.ok) {
+        this.view = 'PrintView'
+      }
+    } catch (e) {
+      // ignore network errors
+    }
+  },
   components: { LoginView, PrintView },
   methods: {
     onLogin() {
       this.view = 'PrintView'
+    },
+    onLogout() {
+      this.view = 'LoginView'
+    },
+    async logout() {
+      try {
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+      } catch (e) {
+        // ignore errors
+      }
+      this.onLogout()
     }
   }
 }

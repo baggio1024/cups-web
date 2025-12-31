@@ -58,6 +58,16 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
     writeJSON(w, map[string]bool{"ok": true})
 }
 
+// SessionHandler handles GET /api/session and returns session info if present
+func SessionHandler(w http.ResponseWriter, r *http.Request) {
+    sess, err := auth.GetSession(r)
+    if err != nil {
+        http.Error(w, "unauthorized", http.StatusUnauthorized)
+        return
+    }
+    writeJSON(w, sess)
+}
+
 func CSRFHandler(w http.ResponseWriter, r *http.Request) {
     // Not used: CSRF token is set on login; provide endpoint if needed
     token := randomToken()

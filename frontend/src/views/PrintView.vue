@@ -7,7 +7,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="col-span-1 space-y-4">
             <label class="label">
-              <span class="label-text">Printer</span>
+              <span class="label-text">打印机</span>
             </label>
             <select v-model="printer" class="select select-bordered w-full">
               <option v-for="p in printers" :key="p.uri" :value="p.uri">{{ p.name }} — {{ p.uri }}</option>
@@ -15,23 +15,23 @@
 
             <div>
               <label class="label">
-                <span class="label-text">File</span>
+                <span class="label-text">文件</span>
               </label>
               <input type="file" ref="file" @change="onFileChange" class="file-input file-input-bordered w-full" />
             </div>
 
             <div class="space-x-2">
-              <button class="btn btn-primary" :disabled="!canPrint || converting" @click="uploadAndPrint">Print</button>
-              <button class="btn" :disabled="!canConvert" @click="convertToPdf">Convert</button>
-              <a v-if="previewUrl" :href="previewUrl" :download="downloadName" class="btn btn-ghost">Download Preview</a>
+              <button class="btn btn-primary" :disabled="!canPrint || converting" @click="uploadAndPrint">打印</button>
+              <button class="btn" :disabled="!canConvert" @click="convertToPdf">转换</button>
+              <a v-if="previewUrl" :href="previewUrl" :download="downloadName" class="btn btn-ghost">下载预览</a>
             </div>
 
             <div class="text-sm text-muted">{{ msg }}</div>
 
             <div class="mt-4">
-              <label class="label"><span class="label-text">Conversion status</span></label>
-              <div v-if="converting" class="alert alert-info">Converting…</div>
-              <div v-if="converted" class="alert alert-success">Converted to PDF</div>
+              <label class="label"><span class="label-text">转换状态</span></label>
+              <div v-if="converting" class="alert alert-info">转换中…</div>
+              <div v-if="converted" class="alert alert-success">已转换为 PDF</div>
             </div>
           </div>
 
@@ -47,7 +47,7 @@
               <div v-else-if="previewType === 'text'" class="p-4 whitespace-pre-wrap overflow-auto h-64">
                 {{ textPreview }}
               </div>
-              <div v-else class="p-4 text-muted">No preview available</div>
+              <div v-else class="p-4 text-muted">无预览可用</div>
             </div>
           </div>
         </div>
@@ -93,11 +93,14 @@ export default {
         const last = localStorage.getItem('last_printer')
         if (last) this.printer = last
         else if (this.printers.length > 0) this.printer = this.printers[0].uri
+      } else if (resp.status === 401) {
+        // session expired / not logged in; notify parent to switch to login view
+        this.$emit('logout')
       } else {
-        this.msg = 'failed to load printers'
+        this.msg = '加载打印机失败'
       }
     } catch (e) {
-      this.msg = 'failed to load printers: ' + e.message
+      this.msg = '加载打印机失败: ' + e.message
     }
   },
   methods: {
@@ -142,7 +145,7 @@ export default {
       } else if (this.isOfficeFile(f)) {
         // Office files: preview not available in-browser; show a notice
         this.previewType = 'text'
-        this.textPreview = 'Office document (preview unavailable). Click Convert to convert to PDF.'
+        this.textPreview = 'Office 文档（无法预览）。点击“转换”生成 PDF。'
         this.pdfBlob = null
         this.converted = false
       } else if (f.type.startsWith('text/') || /\.(txt|md|html)$/i.test(f.name)) {
@@ -197,9 +200,9 @@ export default {
         this.previewUrl = URL.createObjectURL(blob)
         this.previewType = 'pdf'
         this.converted = true
-        this.msg = 'Conversion ready'
+        this.msg = '已准备好转换'
       } catch (e) {
-        this.msg = 'Conversion failed: ' + e.message
+        this.msg = '转换失败: ' + e.message
       } finally {
         this.converting = false
       }
@@ -232,7 +235,7 @@ export default {
         if (blob.type !== 'application/pdf') {
           // sometimes servers may not set mime; still accept
           // but warn in msg
-          this.msg = 'Converted file received (mime: ' + blob.type + ')'
+          this.msg = '已收到已转换文件 (mime: ' + blob.type + ')'
         }
         return blob
       } catch (e) {
@@ -267,7 +270,7 @@ export default {
       return doc.output('blob')
     },
     async uploadAndPrint() {
-      if (!this.printer) { this.msg = 'Select a printer'; return }
+      if (!this.printer) { this.msg = '请选择打印机'; return }
       let fileToSend = null
       let filename = ''
       if (this.pdfBlob) {
@@ -278,7 +281,7 @@ export default {
         fileToSend = this.selectedFile
         filename = this.selectedFile.name
       } else {
-        this.msg = 'No file to print'
+        this.msg = '没有可打印的文件'
         return
       }
 
@@ -295,7 +298,7 @@ export default {
         })
         if (!resp.ok) throw new Error('print failed')
         const j = await resp.json()
-        this.msg = 'Job queued: ' + (j.jobId || '')
+        this.msg = '任务已加入队列: ' + (j.jobId || '')
         localStorage.setItem('last_printer', this.printer)
       } catch (e) {
         this.msg = e.message
