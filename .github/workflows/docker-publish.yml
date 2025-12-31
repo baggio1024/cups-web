@@ -37,7 +37,7 @@ jobs:
           push: true
           tags: |
             hanxi/cups:latest
-            hanxi/cups:${{ github.sha }}
+            hanxi/cups:${{ github.ref_name }}
 
       - name: Build and push hanxi/cups-web (multi-arch)
         uses: docker/build-push-action@v4
@@ -48,9 +48,9 @@ jobs:
           push: true
           tags: |
             hanxi/cups-web:latest
-            hanxi/cups-web:${{ github.sha }}
+            hanxi/cups-web:${{ github.ref_name }}
 
       - name: Output pushed image refs
         run: |
-          echo "Pushed hanxi/cups:latest and hanxi/cups:${GITHUB_SHA}"
-          echo "Pushed hanxi/cups-web:latest and hanxi/cups-web:${GITHUB_SHA}"
+          echo "Pushed hanxi/cups:latest and hanxi/cups:${{ github.ref_name }}"
+          echo "Pushed hanxi/cups-web:latest and hanxi/cups-web:${{ github.ref_name }}"
