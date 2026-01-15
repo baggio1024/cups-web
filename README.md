@@ -28,8 +28,8 @@
       <b>文件上传</b>
     </td>
     <td align="center">
-      <img src="screenshots/print3.png" width="400" alt="打印任务"><br/>
-      <b>打印任务</b>
+      <img src="screenshots/admin.png" width="400" alt="管理后台"><br/>
+      <b>管理后台</b>
     </td>
   </tr>
 </table>
@@ -41,6 +41,7 @@
 - **远程打印**：随时随地通过网页上传文件进行打印。
 - **格式支持**：除了常见的图片和 PDF，还支持 **Office 文档** (docx, xlsx, ppt 等) 自动转换为 PDF 并打印 (基于 LibreOffice)。
 - **安全认证**：简单的账号密码登录保护。
+- **多用户管理**： 支持多用户使用和打印记录。
 - **易于部署**：支持 Docker 一键部署。
 
 ## 🛠️ 技术栈
