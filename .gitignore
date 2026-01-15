@@ -20,6 +20,8 @@ coverage/
 # Build outputs
 dist/
 out/
+data/
+uploads/
 
 # Go
 vendor/
