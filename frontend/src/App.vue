@@ -1,15 +1,18 @@
 <template>
   <div class="grid grid-rows-[auto_1fr] min-h-screen w-full bg-base-200">
     <div class="navbar bg-base-100 shadow z-10 px-4 w-full">
-      <div class="flex-1">
+      <div class="flex-1 flex items-center gap-3">
         <h1 class="text-xl font-bold text-base-content">CUPS 打印</h1>
+        <span v-if="session" class="text-sm text-base-content/60">{{ session.username }}</span>
       </div>
-      <div class="flex-none">
-        <button v-if="view === 'PrintView'" class="btn btn-sm btn-outline" @click="logout">登出</button>
+      <div class="flex-none gap-2">
+        <button v-if="isAdmin" class="btn btn-sm btn-ghost" :class="{ 'btn-active': view === 'PrintView' }" @click="view = 'PrintView'">打印</button>
+        <button v-if="isAdmin" class="btn btn-sm btn-ghost" :class="{ 'btn-active': view === 'AdminView' }" @click="view = 'AdminView'">管理</button>
+        <button v-if="session" class="btn btn-sm btn-outline" @click="logout">登出</button>
       </div>
     </div>
     <div class="overflow-auto relative">
-      <component :is="view" @login-success="onLogin" @logout="onLogout" />
+      <component :is="view" :session="session" @login-success="onLogin" @logout="onLogout" />
     </div>
   </div>
 </template>
@@ -17,28 +20,41 @@
 <script>
 import LoginView from './views/LoginView.vue'
 import PrintView from './views/PrintView.vue'
+import AdminView from './views/AdminView.vue'
 
 export default {
   data() {
-    return { view: 'LoginView' }
+    return { view: 'LoginView', session: null }
   },
   async mounted() {
-    // check existing session on page load; if session present, go straight to PrintView
-    try {
-      const resp = await fetch('/api/session', { credentials: 'include' })
-      if (resp.ok) {
-        this.view = 'PrintView'
-      }
-    } catch (e) {
-      // ignore network errors
+    await this.loadSession()
+  },
+  components: { LoginView, PrintView, AdminView },
+  computed: {
+    isAdmin() {
+      return this.session && this.session.role === 'admin'
     }
   },
-  components: { LoginView, PrintView },
   methods: {
-    onLogin() {
-      this.view = 'PrintView'
+    async loadSession() {
+      try {
+        const resp = await fetch('/api/session', { credentials: 'include' })
+        if (resp.ok) {
+          this.session = await resp.json()
+          this.view = 'PrintView'
+        } else {
+          this.session = null
+          this.view = 'LoginView'
+        }
+      } catch (e) {
+        this.session = null
+      }
+    },
+    async onLogin() {
+      await this.loadSession()
     },
     onLogout() {
+      this.session = null
       this.view = 'LoginView'
     },
     async logout() {
