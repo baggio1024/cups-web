@@ -1,9 +1,10 @@
 services:
   cups:
-    image: hanxi/cups:latest
+    image: docker.1ms.run/hanxi/cups:latest
+    user: root
     environment:
-      - CUPSADMIN=${CUPSADMIN} # CUPS 管理员用户名
-      - CUPSPASSWORD=${CUPSPASSWORD} # CUPS 管理员密码
+      - CUPSADMIN=${CUPSADMIN}
+      - CUPSPASSWORD=${CUPSPASSWORD}
     ports:
       - "631:631"
     devices:
@@ -13,15 +14,16 @@ services:
     restart: unless-stopped
 
   web:
-    image: hanxi/cups-web:latest
+    image: docker.1ms.run/hanxi/cups-web:latest
+    user: root
     environment:
-      - SESSION_HASH_KEY=${SESSION_HASH_KEY} # session 加密 hash key
-      - SESSION_BLOCK_KEY=${SESSION_BLOCK_KEY} # session 加密 block key
-      - SESSION_SECURE=${SESSION_SECURE} # 如果使用 https，设置为 true
-      - CUPS_HOST=cups:631 # CUPS 服务地址
+      - SESSION_HASH_KEY=${SESSION_HASH_KEY}
+      - SESSION_BLOCK_KEY=${SESSION_BLOCK_KEY}
+      - SESSION_SECURE=${SESSION_SECURE}
+      - CUPS_HOST=cups:631
     volumes:
-      - ./.data:/data # 默认路径是 DB_PATH=/data/cups-web.db
-      - ./.uploads:/uploads # 默认路径是 UPLOAD_DIR=/uploads
+      - ./.data:/data
+      - ./.uploads:/uploads
     ports:
       - "1180:8080"
     depends_on:

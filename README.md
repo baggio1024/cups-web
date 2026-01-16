@@ -96,7 +96,8 @@ cd cups-web
 ```yaml
 services:
   cups:
-    image: hanxi/cups:latest
+    image: docker.1ms.run/hanxi/cups:latest
+    user: root
     environment:
       - CUPSADMIN=${CUPSADMIN}
       - CUPSPASSWORD=${CUPSPASSWORD}
@@ -109,7 +110,8 @@ services:
     restart: unless-stopped
 
   web:
-    image: hanxi/cups-web:latest
+    image: docker.1ms.run/hanxi/cups-web:latest
+    user: root
     environment:
       - SESSION_HASH_KEY=${SESSION_HASH_KEY}
       - SESSION_BLOCK_KEY=${SESSION_BLOCK_KEY}

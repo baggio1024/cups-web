@@ -63,6 +63,15 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 	var pages int
 	kind := detectFileKind(storedAbs, fh.Filename)
 	switch kind {
+	case fileKindPDF:
+		var err error
+		pages, err = countPDFPages(storedAbs)
+		if err != nil {
+			_ = os.Remove(storedAbs)
+			writeJSONError(w, http.StatusBadRequest, "failed to read pages")
+			return
+		}
+		printMime = "application/pdf"
 	case fileKindOffice:
 		outPath, cleanup, err := convertOfficeToPDF(countCtx, storedAbs)
 		if err != nil {
