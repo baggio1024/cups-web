@@ -8,7 +8,8 @@
           <div class="alert bg-base-200">
             <div class="space-y-1 text-sm">
               <div>余额: {{ formatCents(balanceCents) }}</div>
-              <div>单页价格: {{ formatCents(perPageCents) }}</div>
+              <div>黑白单页: {{ formatCents(perPageCents) }}</div>
+              <div>彩色单页: {{ formatCents(colorPageCents) }}</div>
               <div>本月已用: {{ formatCents(monthSpentCents) }}</div>
               <div>本年已用: {{ formatCents(yearSpentCents) }}</div>
             </div>
@@ -46,6 +47,26 @@
                 <span class="label-text">文件</span>
               </label>
               <input type="file" ref="file" @change="onFileChange" class="file-input file-input-bordered w-full" />
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">打印选项</span>
+              </label>
+              <select v-model="isDuplex" class="select select-bordered w-full">
+                <option :value="false">单面打印</option>
+                <option :value="true">双面打印（长边翻转）</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">颜色模式</span>
+              </label>
+              <select v-model="isColor" class="select select-bordered w-full" @change="estimatePrice">
+                <option :value="true">彩色打印</option>
+                <option :value="false">黑白打印</option>
+              </select>
             </div>
 
             <div class="space-x-2">
@@ -104,12 +125,15 @@ export default {
       downloadName: '',
       balanceCents: 0,
       perPageCents: 0,
+      colorPageCents: 0,
       monthSpentCents: 0,
       yearSpentCents: 0,
       monthlyLimitCents: 0,
       yearlyLimitCents: 0,
       estimate: null,
-      estimating: false
+      estimating: false,
+      isDuplex: false,
+      isColor: true
     }
   },
   computed: {
@@ -158,6 +182,7 @@ export default {
         const data = await resp.json()
         this.balanceCents = data.balanceCents || 0
         this.perPageCents = data.perPageCents || 0
+        this.colorPageCents = data.colorPageCents || 0
         this.monthSpentCents = data.monthSpentCents || 0
         this.yearSpentCents = data.yearSpentCents || 0
         this.monthlyLimitCents = data.monthlyLimitCents || 0
@@ -259,6 +284,7 @@ export default {
       const form = new FormData()
       const name = this.downloadName || fileForEstimate.name || 'document.pdf'
       form.append('file', fileForEstimate, name)
+      form.append('color', this.isColor ? 'true' : 'false')
       try {
         const resp = await fetch('/api/estimate', {
           method: 'POST',
@@ -274,6 +300,7 @@ export default {
         const data = await resp.json()
         this.estimate = data
         this.perPageCents = data.perPageCents || this.perPageCents
+        this.colorPageCents = data.colorPageCents || this.colorPageCents
         this.balanceCents = data.balanceCents || this.balanceCents
         this.monthSpentCents = data.monthSpentCents || this.monthSpentCents
         this.yearSpentCents = data.yearSpentCents || this.yearSpentCents
@@ -404,6 +431,8 @@ export default {
       const form = new FormData()
       form.append('file', fileToSend, filename)
       form.append('printer', this.printer)
+      form.append('duplex', this.isDuplex ? 'true' : 'false')
+      form.append('color', this.isColor ? 'true' : 'false')
 
       try {
         const resp = await fetch('/api/print', {

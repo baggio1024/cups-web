@@ -16,6 +16,7 @@ type meResponse struct {
 	Role              string `json:"role"`
 	BalanceCents      int64  `json:"balanceCents"`
 	PerPageCents      int64  `json:"perPageCents"`
+	ColorPageCents    int64  `json:"colorPageCents"`
 	MonthSpentCents   int64  `json:"monthSpentCents"`
 	YearSpentCents    int64  `json:"yearSpentCents"`
 	MonthlyLimitCents int64  `json:"monthlyLimitCents"`
@@ -42,12 +43,17 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
+		colorPage, err := store.GetSettingInt(r.Context(), tx, store.SettingColorPageCents, store.DefaultColorPageCents)
+		if err != nil {
+			return err
+		}
 		resp = meResponse{
 			ID:                user.ID,
 			Username:          user.Username,
 			Role:              user.Role,
 			BalanceCents:      user.BalanceCents,
 			PerPageCents:      perPage,
+			ColorPageCents:    colorPage,
 			MonthSpentCents:   user.MonthSpentCents,
 			YearSpentCents:    user.YearSpentCents,
 			MonthlyLimitCents: user.MonthlyLimitCents,

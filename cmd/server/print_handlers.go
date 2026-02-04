@@ -22,6 +22,8 @@ type printResp struct {
 	BalanceCents    int64  `json:"balanceCents"`
 	MonthSpentCents int64  `json:"monthSpentCents"`
 	YearSpentCents  int64  `json:"yearSpentCents"`
+	IsDuplex        bool   `json:"isDuplex"`
+	IsColor         bool   `json:"isColor"`
 }
 
 var (
@@ -48,6 +50,9 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusBadRequest, "missing printer field")
 		return
 	}
+
+	isDuplex := r.FormValue("duplex") == "true"
+	isColor := r.FormValue("color") == "true"
 
 	storedRel, storedAbs, err := saveUploadedFile(file, fh.Filename, uploadDir)
 	if err != nil {
@@ -169,9 +174,19 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		if err := normalizeUserPeriods(r.Context(), tx, &user, time.Now()); err != nil {
 			return err
 		}
-		perPage, err := store.GetSettingInt(r.Context(), tx, store.SettingPerPageCents, store.DefaultPerPageCents)
-		if err != nil {
-			return err
+		var perPage int64
+		if isColor {
+			var err error
+			perPage, err = store.GetSettingInt(r.Context(), tx, store.SettingColorPageCents, store.DefaultColorPageCents)
+			if err != nil {
+				return err
+			}
+		} else {
+			var err error
+			perPage, err = store.GetSettingInt(r.Context(), tx, store.SettingPerPageCents, store.DefaultPerPageCents)
+			if err != nil {
+				return err
+			}
 		}
 		costCents = int64(pages) * perPage
 		if user.BalanceCents < costCents {
@@ -207,6 +222,8 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 			MonthTotalCents:    monthSpent,
 			YearTotalCents:     yearSpent,
 			Status:             "queued",
+			IsDuplex:           isDuplex,
+			IsColor:            isColor,
 			CreatedAt:          time.Now().UTC().Format(time.RFC3339),
 		}
 		id, err := store.InsertPrintRecord(r.Context(), tx, &rec)
@@ -255,7 +272,7 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename)
+	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename, isDuplex, isColor)
 	if err != nil {
 		_ = refundPrint(r.Context(), recordID, sess.UserID, costCents)
 		writeJSONError(w, http.StatusInternalServerError, "print error: "+err.Error())
@@ -275,5 +292,7 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		BalanceCents:    balanceAfter,
 		MonthSpentCents: monthSpent,
 		YearSpentCents:  yearSpent,
+		IsDuplex:        isDuplex,
+		IsColor:         isColor,
 	})
 }

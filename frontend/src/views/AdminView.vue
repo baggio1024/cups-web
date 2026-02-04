@@ -156,12 +156,18 @@
     <div class="card bg-base-100 shadow">
       <div class="card-body">
         <h2 class="card-title">系统设置</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           <label class="form-control">
             <div class="label">
-              <span class="label-text">单页价格（元/页）</span>
+              <span class="label-text">黑白打印单页价格（元/页）</span>
             </div>
             <input class="input input-bordered" type="number" step="0.01" v-model="settings.perPage" placeholder="例如 0.10" />
+          </label>
+          <label class="form-control">
+            <div class="label">
+              <span class="label-text">彩色打印单页价格（元/页）</span>
+            </div>
+            <input class="input input-bordered" type="number" step="0.01" v-model="settings.colorPage" placeholder="例如 0.30" />
           </label>
           <label class="form-control">
             <div class="label">
@@ -206,7 +212,7 @@ export default {
       topupFilters: { username: '', start: '', end: '' },
       printRecords: [],
       topupRecords: [],
-      settings: { perPage: '', retentionDays: '' }
+      settings: { perPage: '', colorPage: '', retentionDays: '' }
     }
   },
   computed: {
@@ -399,11 +405,13 @@ export default {
       }
       const data = await resp.json()
       this.settings.perPage = this.formatCents(data.perPageCents || 0)
+      this.settings.colorPage = this.formatCents(data.colorPageCents || 0)
       this.settings.retentionDays = String(data.retentionDays || 0)
     },
     async saveSettings() {
       const payload = {
         perPageCents: this.toCents(this.settings.perPage),
+        colorPageCents: this.toCents(this.settings.colorPage),
         retentionDays: parseInt(this.settings.retentionDays || '0', 10)
       }
       const resp = await fetch('/api/admin/settings', {

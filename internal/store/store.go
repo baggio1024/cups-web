@@ -17,11 +17,13 @@ const (
 )
 
 const (
-	SettingPerPageCents  = "per_page_cents"
-	SettingRetentionDays = "retention_days"
+	SettingPerPageCents   = "per_page_cents"
+	SettingColorPageCents = "color_page_cents"
+	SettingRetentionDays  = "retention_days"
 )
 
 const DefaultPerPageCents = 10
+const DefaultColorPageCents = 30
 
 type Store struct {
 	DB *sql.DB
@@ -137,6 +139,8 @@ func (s *Store) migrate(ctx context.Context) error {
 			year_total_cents INTEGER NOT NULL,
 			job_id TEXT,
 			status TEXT NOT NULL,
+			is_duplex INTEGER NOT NULL DEFAULT 0,
+			is_color INTEGER NOT NULL DEFAULT 1,
 			created_at TEXT NOT NULL,
 			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
@@ -150,9 +154,16 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := addColumnIfMissing(ctx, s.DB, "users", "protected INTEGER NOT NULL DEFAULT 0"); err != nil {
 		return fmt.Errorf("migrate: %w", err)
 	}
+	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "is_duplex INTEGER NOT NULL DEFAULT 0"); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "is_color INTEGER NOT NULL DEFAULT 1"); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
 
-	if _, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?), (?, ?)`,
+	if _, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?), (?, ?), (?, ?)`,
 		SettingPerPageCents, strconv.Itoa(DefaultPerPageCents),
+		SettingColorPageCents, strconv.Itoa(DefaultColorPageCents),
 		SettingRetentionDays, "0",
 	); err != nil {
 		return fmt.Errorf("seed settings: %w", err)

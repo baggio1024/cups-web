@@ -60,8 +60,9 @@ type topupPayload struct {
 }
 
 type settingsPayload struct {
-	PerPageCents  *int64 `json:"perPageCents"`
-	RetentionDays *int64 `json:"retentionDays"`
+	PerPageCents   *int64 `json:"perPageCents"`
+	ColorPageCents *int64 `json:"colorPageCents"`
+	RetentionDays  *int64 `json:"retentionDays"`
 }
 
 type topupResponse struct {
@@ -356,6 +357,7 @@ func adminTopupsHandler(w http.ResponseWriter, r *http.Request) {
 
 func adminGetSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	var perPage int64
+	var colorPage int64
 	var retention int64
 	err := appStore.WithTx(r.Context(), true, func(tx *sql.Tx) error {
 		val, err := store.GetSettingInt(r.Context(), tx, store.SettingPerPageCents, store.DefaultPerPageCents)
@@ -363,6 +365,11 @@ func adminGetSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		perPage = val
+		val, err = store.GetSettingInt(r.Context(), tx, store.SettingColorPageCents, store.DefaultColorPageCents)
+		if err != nil {
+			return err
+		}
+		colorPage = val
 		val, err = store.GetSettingInt(r.Context(), tx, store.SettingRetentionDays, 0)
 		if err != nil {
 			return err
@@ -374,7 +381,7 @@ func adminGetSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, "failed to load settings")
 		return
 	}
-	writeJSON(w, map[string]int64{"perPageCents": perPage, "retentionDays": retention})
+	writeJSON(w, map[string]int64{"perPageCents": perPage, "colorPageCents": colorPage, "retentionDays": retention})
 }
 
 func adminUpdateSettingsHandler(w http.ResponseWriter, r *http.Request) {
@@ -389,6 +396,14 @@ func adminUpdateSettingsHandler(w http.ResponseWriter, r *http.Request) {
 				return errors.New("invalid perPageCents")
 			}
 			if err := store.SetSettingInt(r.Context(), tx, store.SettingPerPageCents, *payload.PerPageCents); err != nil {
+				return err
+			}
+		}
+		if payload.ColorPageCents != nil {
+			if *payload.ColorPageCents < 0 {
+				return errors.New("invalid colorPageCents")
+			}
+			if err := store.SetSettingInt(r.Context(), tx, store.SettingColorPageCents, *payload.ColorPageCents); err != nil {
 				return err
 			}
 		}

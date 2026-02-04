@@ -13,6 +13,7 @@ type estimateResp struct {
 	Pages               int   `json:"pages"`
 	Estimated           bool  `json:"estimated"`
 	PerPageCents        int64 `json:"perPageCents"`
+	ColorPageCents      int64 `json:"colorPageCents"`
 	CostCents           int64 `json:"costCents"`
 	BalanceCents        int64 `json:"balanceCents"`
 	MonthSpentCents     int64 `json:"monthSpentCents"`
@@ -35,6 +36,8 @@ func estimateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
+	isColor := r.FormValue("color") == "true"
 
 	tmpPath, cleanup, err := saveTempUpload(file, fh.Filename)
 	if err != nil {
@@ -68,11 +71,21 @@ func estimateHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
-		cost := int64(pages) * perPage
+		colorPage, err := store.GetSettingInt(r.Context(), tx, store.SettingColorPageCents, store.DefaultColorPageCents)
+		if err != nil {
+			return err
+		}
+		var cost int64
+		if isColor {
+			cost = int64(pages) * colorPage
+		} else {
+			cost = int64(pages) * perPage
+		}
 		resp = estimateResp{
 			Pages:               pages,
 			Estimated:           estimated,
 			PerPageCents:        perPage,
+			ColorPageCents:      colorPage,
 			CostCents:           cost,
 			BalanceCents:        user.BalanceCents,
 			MonthSpentCents:     user.MonthSpentCents,

@@ -12,6 +12,7 @@ import (
 
 	"cups-web/internal/auth"
 	"cups-web/internal/store"
+
 	"github.com/gorilla/mux"
 )
 
@@ -29,6 +30,8 @@ type printRecordResponse struct {
 	YearTotalCents     int64  `json:"yearTotalCents"`
 	JobID              string `json:"jobId"`
 	Status             string `json:"status"`
+	IsDuplex           bool   `json:"isDuplex"`
+	IsColor            bool   `json:"isColor"`
 	CreatedAt          string `json:"createdAt"`
 }
 
@@ -196,6 +199,8 @@ func mapPrintRecords(records []store.PrintRecord) []printRecordResponse {
 			YearTotalCents:     rec.YearTotalCents,
 			JobID:              jobID,
 			Status:             rec.Status,
+			IsDuplex:           rec.IsDuplex,
+			IsColor:            rec.IsColor,
 			CreatedAt:          rec.CreatedAt,
 		})
 	}

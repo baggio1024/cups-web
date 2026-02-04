@@ -22,6 +22,8 @@ type PrintRecord struct {
 	YearTotalCents     int64
 	JobID              sql.NullString
 	Status             string
+	IsDuplex           bool
+	IsColor            bool
 	CreatedAt          string
 }
 
@@ -36,11 +38,11 @@ func InsertPrintRecord(ctx context.Context, tx *sql.Tx, rec *PrintRecord) (int64
 	res, err := tx.ExecContext(ctx, `INSERT INTO print_jobs (
 		user_id, printer_uri, filename, stored_path, pages, cost_cents,
 		balance_before_cents, balance_after_cents, month_total_cents, year_total_cents,
-		job_id, status, created_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		job_id, status, is_duplex, is_color, created_at
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		rec.UserID, rec.PrinterURI, rec.Filename, rec.StoredPath, rec.Pages, rec.CostCents,
 		rec.BalanceBeforeCents, rec.BalanceAfterCents, rec.MonthTotalCents, rec.YearTotalCents,
-		rec.JobID, rec.Status, rec.CreatedAt,
+		rec.JobID, rec.Status, rec.IsDuplex, rec.IsColor, rec.CreatedAt,
 	)
 	if err != nil {
 		return 0, err
@@ -57,7 +59,7 @@ func GetPrintRecordByID(ctx context.Context, tx *sql.Tx, id int64) (PrintRecord,
 	row := tx.QueryRowContext(ctx, `SELECT
 		p.id, p.user_id, u.username, p.printer_uri, p.filename, p.stored_path, p.pages, p.cost_cents,
 		p.balance_before_cents, p.balance_after_cents, p.month_total_cents, p.year_total_cents,
-		p.job_id, p.status, p.created_at
+		p.job_id, p.status, p.is_duplex, p.is_color, p.created_at
 		FROM print_jobs p
 		JOIN users u ON u.id = p.user_id
 		WHERE p.id = ?`, id)
@@ -65,7 +67,7 @@ func GetPrintRecordByID(ctx context.Context, tx *sql.Tx, id int64) (PrintRecord,
 	err := row.Scan(
 		&rec.ID, &rec.UserID, &rec.Username, &rec.PrinterURI, &rec.Filename, &rec.StoredPath,
 		&rec.Pages, &rec.CostCents, &rec.BalanceBeforeCents, &rec.BalanceAfterCents,
-		&rec.MonthTotalCents, &rec.YearTotalCents, &rec.JobID, &rec.Status, &rec.CreatedAt,
+		&rec.MonthTotalCents, &rec.YearTotalCents, &rec.JobID, &rec.Status, &rec.IsDuplex, &rec.IsColor, &rec.CreatedAt,
 	)
 	return rec, err
 }
@@ -88,7 +90,7 @@ func ListPrintRecords(ctx context.Context, tx *sql.Tx, filter PrintFilter) ([]Pr
 	query := fmt.Sprintf(`SELECT
 		p.id, p.user_id, u.username, p.printer_uri, p.filename, p.stored_path, p.pages, p.cost_cents,
 		p.balance_before_cents, p.balance_after_cents, p.month_total_cents, p.year_total_cents,
-		p.job_id, p.status, p.created_at
+		p.job_id, p.status, p.is_duplex, p.is_color, p.created_at
 		FROM print_jobs p
 		JOIN users u ON u.id = p.user_id
 		WHERE %s
@@ -109,7 +111,7 @@ func ListPrintRecords(ctx context.Context, tx *sql.Tx, filter PrintFilter) ([]Pr
 		if err := rows.Scan(
 			&rec.ID, &rec.UserID, &rec.Username, &rec.PrinterURI, &rec.Filename, &rec.StoredPath,
 			&rec.Pages, &rec.CostCents, &rec.BalanceBeforeCents, &rec.BalanceAfterCents,
-			&rec.MonthTotalCents, &rec.YearTotalCents, &rec.JobID, &rec.Status, &rec.CreatedAt,
+			&rec.MonthTotalCents, &rec.YearTotalCents, &rec.JobID, &rec.Status, &rec.IsDuplex, &rec.IsColor, &rec.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
