@@ -1,6 +1,6 @@
 services:
   cups:
-    image: docker.1ms.run/hanxi/cups:latest
+    image: docker.1ms.run/baggio1024/cups:latest
     user: root
     environment:
       - CUPSADMIN=${CUPSADMIN}
@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: docker.1ms.run/hanxi/cups-web:latest
+    image: docker.1ms.run/baggio1024/cups-web:latest
     user: root
     environment:
       - SESSION_HASH_KEY=${SESSION_HASH_KEY}
@@ -25,7 +25,7 @@ services:
       - ./.data:/data
       - ./.uploads:/uploads
     ports:
-      - "1180:8080"
+      - "8080:8080"
     depends_on:
       - cups
     restart: unless-stopped
