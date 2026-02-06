@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-cups:
-    name: Build and push hanxi/cups
+    name: Build and push baggio1024/cups
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,7 +27,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push hanxi/cups (multi-arch)
+      - name: Build and push baggio1024/cups (multi-arch)
         uses: docker/build-push-action@v4
         with:
           context: ./cups
@@ -35,13 +35,13 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            hanxi/cups:latest
-            hanxi/cups:${{ github.ref_name }}
+            baggio1024/cups:latest
+            baggio1024/cups:${{ github.ref_name }}
           cache-from: type=gha,scope=cups
           cache-to: type=gha,scope=cups,mode=max
 
   build-cups-web:
-    name: Build and push hanxi/cups-web
+    name: Build and push baggio1024/cups-web
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,7 +59,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push hanxi/cups-web (multi-arch)
+      - name: Build and push baggio1024/cups-web (multi-arch)
         uses: docker/build-push-action@v4
         with:
           context: ./
@@ -67,8 +67,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            hanxi/cups-web:latest
-            hanxi/cups-web:${{ github.ref_name }}
+            baggio1024/cups-web:latest
+            baggio1024/cups-web:${{ github.ref_name }}
           cache-from: type=gha,scope=cups-web
           cache-to: type=gha,scope=cups-web,mode=max
 
@@ -81,5 +81,5 @@ jobs:
     steps:
       - name: Output pushed image refs
         run: |
-          echo "Pushed hanxi/cups:latest and hanxi/cups:${{ github.ref_name }}"
-          echo "Pushed hanxi/cups-web:latest and hanxi/cups-web:${{ github.ref_name }}"
+          echo "Pushed baggio1024/cups:latest and baggio1024/cups:${{ github.ref_name }}"
+          echo "Pushed baggio1024/cups-web:latest and baggio1024/cups-web:${{ github.ref_name }}"
