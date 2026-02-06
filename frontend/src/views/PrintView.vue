@@ -53,9 +53,10 @@
               <label class="label">
                 <span class="label-text">打印选项</span>
               </label>
-              <select v-model="isDuplex" class="select select-bordered w-full">
-                <option :value="false">单面打印</option>
-                <option :value="true">双面打印（长边翻转）</option>
+              <select v-model="sides" class="select select-bordered w-full">
+                <option value="one-sided">单面打印</option>
+                <option value="two-sided-long-edge">双面打印（长边翻转）</option>
+                <option value="two-sided-short-edge">双面打印（短边翻转）</option>
               </select>
             </div>
 
@@ -64,8 +65,8 @@
                 <span class="label-text">颜色模式</span>
               </label>
               <select v-model="isColor" class="select select-bordered w-full" @change="estimatePrice">
-                <option :value="true">彩色打印</option>
                 <option :value="false">黑白打印</option>
+                <option :value="true">彩色打印</option>
               </select>
             </div>
 
@@ -132,8 +133,8 @@ export default {
       yearlyLimitCents: 0,
       estimate: null,
       estimating: false,
-      isDuplex: false,
-      isColor: true
+      sides: 'one-sided',
+      isColor: false
     }
   },
   computed: {
@@ -431,7 +432,8 @@ export default {
       const form = new FormData()
       form.append('file', fileToSend, filename)
       form.append('printer', this.printer)
-      form.append('duplex', this.isDuplex ? 'true' : 'false')
+      form.append('sides', this.sides)
+      form.append('duplex', this.sides.startsWith('two-sided') ? 'true' : 'false')
       form.append('color', this.isColor ? 'true' : 'false')
 
       try {

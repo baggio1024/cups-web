@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"cups-web/internal/auth"
@@ -51,7 +52,16 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isDuplex := r.FormValue("duplex") == "true"
+	sides := r.FormValue("sides")
+	duplexParam := r.FormValue("duplex")
+	if sides == "" {
+		if duplexParam == "true" {
+			sides = "two-sided-long-edge"
+		} else {
+			sides = "one-sided"
+		}
+	}
+	isDuplex := strings.HasPrefix(sides, "two-sided")
 	isColor := r.FormValue("color") == "true"
 
 	storedRel, storedAbs, err := saveUploadedFile(file, fh.Filename, uploadDir)
@@ -272,7 +282,7 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename, isDuplex, isColor)
+	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename, sides, isColor)
 	if err != nil {
 		_ = refundPrint(r.Context(), recordID, sess.UserID, costCents)
 		writeJSONError(w, http.StatusInternalServerError, "print error: "+err.Error())

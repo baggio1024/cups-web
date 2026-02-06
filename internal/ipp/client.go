@@ -15,7 +15,7 @@ import (
 // SendPrintJob sends data to the printer via IPP using goipp to build the
 // IPP Print-Job request. It returns a human-readable status or job identifier
 // when available.
-func SendPrintJob(printerURI string, r io.Reader, mime string, username string, jobName string, isDuplex bool, isColor bool) (string, error) {
+func SendPrintJob(printerURI string, r io.Reader, mime string, username string, jobName string, sides string, isColor bool) (string, error) {
 	// Build IPP Print-Job request
 	req := goipp.NewRequest(goipp.DefaultVersion, goipp.OpPrintJob, 1)
 	req.Operation.Add(goipp.MakeAttribute("attributes-charset", goipp.TagCharset, goipp.String("utf-8")))
@@ -33,11 +33,10 @@ func SendPrintJob(printerURI string, r io.Reader, mime string, username string, 
 	req.Operation.Add(goipp.MakeAttribute("document-format", goipp.TagMimeType, goipp.String(mime)))
 
 	// Add duplex printing attribute
-	if isDuplex {
-		req.Operation.Add(goipp.MakeAttribute("sides", goipp.TagKeyword, goipp.String("two-sided-long-edge")))
-	} else {
-		req.Operation.Add(goipp.MakeAttribute("sides", goipp.TagKeyword, goipp.String("one-sided")))
+	if sides == "" {
+		sides = "one-sided"
 	}
+	req.Operation.Add(goipp.MakeAttribute("sides", goipp.TagKeyword, goipp.String(sides)))
 
 	// Add color mode attribute
 	if isColor {
