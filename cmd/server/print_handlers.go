@@ -184,41 +184,11 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		if err := normalizeUserPeriods(r.Context(), tx, &user, time.Now()); err != nil {
 			return err
 		}
-		var perPage int64
-		if isColor {
-			var err error
-			perPage, err = store.GetSettingInt(r.Context(), tx, store.SettingColorPageCents, store.DefaultColorPageCents)
-			if err != nil {
-				return err
-			}
-		} else {
-			var err error
-			perPage, err = store.GetSettingInt(r.Context(), tx, store.SettingPerPageCents, store.DefaultPerPageCents)
-			if err != nil {
-				return err
-			}
-		}
-		costCents = int64(pages) * perPage
-		if user.BalanceCents < costCents {
-			return errInsufficientBalance
-		}
-		if user.MonthlyLimitCents > 0 && user.MonthSpentCents+costCents > user.MonthlyLimitCents {
-			return errMonthlyLimit
-		}
-		if user.YearlyLimitCents > 0 && user.YearSpentCents+costCents > user.YearlyLimitCents {
-			return errYearlyLimit
-		}
-
+		costCents = 0
 		before := user.BalanceCents
-		balanceAfter = before - costCents
-		monthSpent = user.MonthSpentCents + costCents
-		yearSpent = user.YearSpentCents + costCents
-		if _, err := tx.ExecContext(r.Context(), `UPDATE users SET
-            balance_cents = ?, month_spent_cents = ?, year_spent_cents = ?, updated_at = ?
-            WHERE id = ?`, balanceAfter, monthSpent, yearSpent, time.Now().UTC().Format(time.RFC3339), user.ID,
-		); err != nil {
-			return err
-		}
+		balanceAfter = before
+		monthSpent = user.MonthSpentCents
+		yearSpent = user.YearSpentCents
 
 		rec := store.PrintRecord{
 			UserID:             user.ID,
@@ -245,22 +215,12 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		_ = os.Remove(storedAbs)
-		switch {
-		case errors.Is(err, errInsufficientBalance):
-			writeJSONError(w, http.StatusBadRequest, "余额不足以支付本次打印")
-		case errors.Is(err, errMonthlyLimit):
-			writeJSONError(w, http.StatusBadRequest, "超过月度限额")
-		case errors.Is(err, errYearlyLimit):
-			writeJSONError(w, http.StatusBadRequest, "超过年度限额")
-		default:
-			writeJSONError(w, http.StatusInternalServerError, "failed to create print record")
-		}
+		writeJSONError(w, http.StatusInternalServerError, "failed to create print record")
 		return
 	}
 
 	f, err := os.Open(printPath)
 	if err != nil {
-		_ = refundPrint(r.Context(), recordID, sess.UserID, costCents)
 		writeJSONError(w, http.StatusInternalServerError, "failed to open file")
 		return
 	}
@@ -284,7 +244,6 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 
 	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename, sides, isColor)
 	if err != nil {
-		_ = refundPrint(r.Context(), recordID, sess.UserID, costCents)
 		writeJSONError(w, http.StatusInternalServerError, "print error: "+err.Error())
 		return
 	}

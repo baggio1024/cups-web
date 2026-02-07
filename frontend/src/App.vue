@@ -14,11 +14,6 @@
     <div class="overflow-auto relative">
       <component :is="view" :session="session" @login-success="onLogin" @logout="onLogout" />
     </div>
-    <footer class="footer footer-center p-4 bg-base-100 text-base-content">
-      <div class="text-sm">
-        <p>Powered by <a href="https://github.com/hanxi/cups-web" target="_blank" class="link link-hover text-primary">cups-web</a></p>
-      </div>
-    </footer>
   </div>
 </template>
 

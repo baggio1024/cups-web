@@ -4,34 +4,7 @@
       <div class="card-body">
         <h2 class="card-title">Print</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-          <div class="alert bg-base-200">
-            <div class="space-y-1 text-sm">
-              <div>余额: {{ formatCents(balanceCents) }}</div>
-              <div>黑白单页: {{ formatCents(perPageCents) }}</div>
-              <div>彩色单页: {{ formatCents(colorPageCents) }}</div>
-              <div>本月已用: {{ formatCents(monthSpentCents) }}</div>
-              <div>本年已用: {{ formatCents(yearSpentCents) }}</div>
-            </div>
-          </div>
-          <div class="alert bg-base-200">
-            <div class="space-y-1 text-sm">
-              <div>月度限额: {{ monthlyLimitCents ? formatCents(monthlyLimitCents) : '未设置' }}</div>
-              <div>年度限额: {{ yearlyLimitCents ? formatCents(yearlyLimitCents) : '未设置' }}</div>
-            </div>
-          </div>
-          <div class="alert bg-base-200">
-            <div class="text-sm" v-if="estimating">估算中…</div>
-            <div class="space-y-1 text-sm" v-else-if="estimate">
-              <div>预估页数: {{ estimate.pages }} <span v-if="estimate.estimated">(估算)</span></div>
-              <div>预估费用: {{ formatCents(estimate.costCents) }}</div>
-              <div v-if="estimate.insufficientBalance" class="text-error">余额不足</div>
-              <div v-if="estimate.wouldExceedMonthly" class="text-warning">超过月度限额</div>
-              <div v-if="estimate.wouldExceedYearly" class="text-warning">超过年度限额</div>
-            </div>
-            <div class="text-sm" v-else>选择文件后显示估算</div>
-          </div>
-        </div>
+        <div class="mb-2"></div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="col-span-1 space-y-4">
@@ -53,7 +26,8 @@
               <label class="label">
                 <span class="label-text">打印选项</span>
               </label>
-              <select v-model="sides" class="select select-bordered w-full">
+              <select v-model="sides" class="select select-bordered w-full" :class="{ 'select-error': !sides }">
+                <option value="">请选择...</option>
                 <option value="one-sided">单面打印</option>
                 <option value="two-sided-long-edge">双面打印（长边翻转）</option>
                 <option value="two-sided-short-edge">双面打印（短边翻转）</option>
@@ -64,7 +38,7 @@
               <label class="label">
                 <span class="label-text">颜色模式</span>
               </label>
-              <select v-model="isColor" class="select select-bordered w-full" @change="estimatePrice">
+              <select v-model="isColor" class="select select-bordered w-full">
                 <option :value="false">黑白打印</option>
                 <option :value="true">彩色打印</option>
               </select>
@@ -133,7 +107,7 @@ export default {
       yearlyLimitCents: 0,
       estimate: null,
       estimating: false,
-      sides: 'one-sided',
+      sides: '',
       isColor: false
     }
   },
@@ -141,11 +115,7 @@ export default {
     canPrint() {
       const hasFile = !!this.printer && (!!this.pdfBlob || !!this.selectedFile)
       if (!hasFile) return false
-      if (this.estimating) return false
-      if (this.estimate) {
-        if (this.estimate.insufficientBalance) return false
-        if (this.estimate.wouldExceedMonthly || this.estimate.wouldExceedYearly) return false
-      }
+      if (!this.sides) return false
       return true
     },
     canConvert() {
@@ -276,43 +246,9 @@ export default {
         this.pdfBlob = null
         this.converted = false
       }
-      this.estimatePrice()
+      // removed estimation call
     },
-    async estimatePrice() {
-      const fileForEstimate = this.pdfBlob || this.selectedFile
-      if (!fileForEstimate) return
-      this.estimating = true
-      const form = new FormData()
-      const name = this.downloadName || fileForEstimate.name || 'document.pdf'
-      form.append('file', fileForEstimate, name)
-      form.append('color', this.isColor ? 'true' : 'false')
-      try {
-        const resp = await fetch('/api/estimate', {
-          method: 'POST',
-          body: form,
-          credentials: 'include',
-          headers: { 'X-CSRF-Token': this.getCSRF() }
-        })
-        if (!resp.ok) {
-          this.msg = await this.readError(resp)
-          if (resp.status === 401) this.$emit('logout')
-          return
-        }
-        const data = await resp.json()
-        this.estimate = data
-        this.perPageCents = data.perPageCents || this.perPageCents
-        this.colorPageCents = data.colorPageCents || this.colorPageCents
-        this.balanceCents = data.balanceCents || this.balanceCents
-        this.monthSpentCents = data.monthSpentCents || this.monthSpentCents
-        this.yearSpentCents = data.yearSpentCents || this.yearSpentCents
-        this.monthlyLimitCents = data.monthlyLimitCents || this.monthlyLimitCents
-        this.yearlyLimitCents = data.yearlyLimitCents || this.yearlyLimitCents
-      } catch (e) {
-        this.msg = '估算失败: ' + e.message
-      } finally {
-        this.estimating = false
-      }
-    },
+    // estimation removed
     async convertToPdf() {
       if (!this.selectedFile) { this.msg = 'No file selected'; return }
       this.converting = true
@@ -344,7 +280,6 @@ export default {
         this.previewType = 'pdf'
         this.converted = true
         this.msg = '已准备好转换'
-        this.estimatePrice()
       } catch (e) {
         this.msg = '转换失败: ' + e.message
       } finally {
@@ -415,6 +350,7 @@ export default {
     },
     async uploadAndPrint() {
       if (!this.printer) { this.msg = '请选择打印机'; return }
+      if (!this.sides) { this.msg = '请选择打印选项'; return }
       let fileToSend = null
       let filename = ''
       if (this.pdfBlob) {
@@ -450,10 +386,6 @@ export default {
         }
         const j = await resp.json()
         this.msg = '任务已加入队列: ' + (j.jobId || '')
-        this.balanceCents = j.balanceCents || this.balanceCents
-        this.monthSpentCents = j.monthSpentCents || this.monthSpentCents
-        this.yearSpentCents = j.yearSpentCents || this.yearSpentCents
-        this.estimate = null
         localStorage.setItem('last_printer', this.printer)
       } catch (e) {
         this.msg = e.message
