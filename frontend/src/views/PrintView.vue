@@ -9,7 +9,8 @@
             <label class="label">
               <span class="label-text">打印机</span>
             </label>
-            <select v-model="printer" class="select select-bordered w-full" :class="{ 'select-error': !printer }">
+            <select v-model="printer" class="select select-bordered w-full" :class="{ 'select-error': !printer || printers.length === 0 }">
+              <option value="" disabled>请选择打印机</option>
               <option v-for="p in printers" :key="p.uri" :value="p.uri">{{ p.name }} — {{ p.uri }}</option>
             </select>
 
@@ -152,9 +153,8 @@ export default {
       const resp = await fetch('/api/printers', { credentials: 'include' })
       if (resp.ok) {
         this.printers = await resp.json()
-        const last = localStorage.getItem('last_printer')
-        if (last) this.printer = last
-        else if (this.printers.length > 0) this.printer = this.printers[0].uri
+        if (this.printers.length > 0) this.printer = this.printers[0].uri
+        else this.printer = ''
       } else if (resp.status === 401) {
         // session expired / not logged in; notify parent to switch to login view
         this.$emit('logout')
