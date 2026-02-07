@@ -48,6 +48,9 @@
               <div v-if="totalPages > 0" class="text-sm mt-1 p-2 bg-base-200 rounded">
                 <strong>文件总页数: {{ totalPages }} 页</strong>
               </div>
+              <div v-else-if="selectedFile && !pdfBlob" class="text-sm mt-1 p-2 bg-warning/10 rounded">
+                文件转换后才能计算页数
+              </div>
               <div v-else-if="calculatingPages" class="text-sm mt-1 p-2 bg-info/10 rounded">
                 正在计算页数...
               </div>
@@ -321,6 +324,13 @@ export default {
     // estimation removed
     async convertToPdf() {
       if (!this.selectedFile) { this.msg = 'No file selected'; return }
+      
+      // 确保PDF.js库已加载
+      if (!window.pdfjsLib) {
+        this.msg = 'PDF.js库加载中，请稍后再试...'
+        return
+      }
+      
       this.converting = true
       this.msg = ''
       try {
