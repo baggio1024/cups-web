@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -63,6 +64,17 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	isDuplex := strings.HasPrefix(sides, "two-sided")
 	isColor := r.FormValue("color") == "true"
+	
+	// 获取打印份数，默认为1
+	copies := 1
+	if copiesStr := r.FormValue("copies"); copiesStr != "" {
+		if c, err := strconv.Atoi(copiesStr); err == nil && c > 0 && c <= 100 {
+			copies = c
+		}
+	}
+	
+	// 获取页面范围，默认为全部页面
+	pageRange := r.FormValue("pageRange")
 
 	storedRel, storedAbs, err := saveUploadedFile(file, fh.Filename, uploadDir)
 	if err != nil {
@@ -204,6 +216,8 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 			Status:             "queued",
 			IsDuplex:           isDuplex,
 			IsColor:            isColor,
+			Copies:             copies,
+			PageRange:          pageRange,
 			CreatedAt:          time.Now().UTC().Format(time.RFC3339),
 		}
 		id, err := store.InsertPrintRecord(r.Context(), tx, &rec)
@@ -242,7 +256,7 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename, sides, isColor)
+	job, err := ipp.SendPrintJob(printer, f, mime, sess.Username, fh.Filename, sides, isColor, copies, pageRange)
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "print error: "+err.Error())
 		return

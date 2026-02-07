@@ -2,8 +2,6 @@
   <div class="p-6">
     <div class="card bg-base-100 shadow">
       <div class="card-body">
-        <h2 class="card-title">Print</h2>
-
         <div class="mb-2"></div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -11,7 +9,7 @@
             <label class="label">
               <span class="label-text">打印机</span>
             </label>
-            <select v-model="printer" class="select select-bordered w-full">
+            <select v-model="printer" class="select select-bordered w-full" :class="{ 'select-error': !printer }">
               <option v-for="p in printers" :key="p.uri" :value="p.uri">{{ p.name }} — {{ p.uri }}</option>
             </select>
 
@@ -19,9 +17,8 @@
               <label class="label">
                 <span class="label-text">文件</span>
               </label>
-              <input type="file" ref="file" @change="onFileChange" class="file-input file-input-bordered w-full" />
+              <input type="file" ref="file" @change="onFileChange" class="file-input file-input-bordered w-full" :class="{ 'input-error': !selectedFile && !pdfBlob }" />
             </div>
-
             <div>
               <label class="label">
                 <span class="label-text">打印选项</span>
@@ -33,6 +30,25 @@
                 <option value="two-sided-short-edge">双面打印（短边翻转）</option>
               </select>
             </div>
+            <div>
+              <label class="label">
+                <span class="label-text">打印份数</span>
+              </label>
+              <input type="number" v-model.number="copies" min="1" max="100" class="input input-bordered w-full" :class="{ 'input-error': !copies || copies < 1 }" />
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">打印页面</span>
+              </label>
+              <select v-model="pageRange" class="select select-bordered w-full" :class="{ 'select-error': !pageRange }">
+                <option value="all">全部页面</option>
+                <option value="custom">自定义页面范围</option>
+              </select>
+              <input v-if="pageRange === 'custom'" type="text" v-model="customPageRange" placeholder="例如: 1-3,5,7-9" class="input input-bordered w-full mt-2" :class="{ 'input-error': pageRange === 'custom' && !customPageRange }" />
+            </div>
+
+            
 
             <div>
               <label class="label">
@@ -45,7 +61,7 @@
             </div>
 
             <div class="space-x-2">
-              <button class="btn btn-primary" :disabled="!canPrint || converting" @click="uploadAndPrint">打印</button>
+              <button class="btn btn-primary" :disabled="!canPrint || converting" @click="uploadAndPrint">提交</button>
               <button class="btn" :disabled="!canConvert" @click="convertToPdf">转换</button>
               <a v-if="previewUrl" :href="previewUrl" :download="downloadName" class="btn btn-ghost">下载预览</a>
             </div>
@@ -108,14 +124,21 @@ export default {
       estimate: null,
       estimating: false,
       sides: '',
-      isColor: false
+      isColor: false,
+      copies: 1,
+      pageRange: 'all',
+      customPageRange: ''
     }
   },
   computed: {
     canPrint() {
-      const hasFile = !!this.printer && (!!this.pdfBlob || !!this.selectedFile)
+      if (!this.printer) return false
+      const hasFile = !!this.pdfBlob || !!this.selectedFile
       if (!hasFile) return false
       if (!this.sides) return false
+      if (!this.copies || this.copies < 1) return false
+      if (!this.pageRange || (this.pageRange !== 'all' && this.pageRange !== 'custom')) return false
+      if (this.pageRange === 'custom' && !this.customPageRange) return false
       return true
     },
     canConvert() {
@@ -351,6 +374,10 @@ export default {
     async uploadAndPrint() {
       if (!this.printer) { this.msg = '请选择打印机'; return }
       if (!this.sides) { this.msg = '请选择打印选项'; return }
+      if (!this.copies || this.copies < 1) { this.msg = '请输入有效的打印份数'; return }
+      if (!this.pageRange || (this.pageRange !== 'all' && this.pageRange !== 'custom')) { this.msg = '请选择打印页面范围'; return }
+      if (this.pageRange === 'custom' && !this.customPageRange) { this.msg = '请输入自定义页面范围'; return }
+      if (!this.selectedFile && !this.pdfBlob) { this.msg = '请选择要打印的文件'; return }
       let fileToSend = null
       let filename = ''
       if (this.pdfBlob) {
@@ -371,6 +398,14 @@ export default {
       form.append('sides', this.sides)
       form.append('duplex', this.sides.startsWith('two-sided') ? 'true' : 'false')
       form.append('color', this.isColor ? 'true' : 'false')
+      form.append('copies', this.copies.toString())
+      
+      // Add page range
+      if (this.pageRange === 'all') {
+        form.append('pageRange', 'all')
+      } else if (this.pageRange === 'custom' && this.customPageRange) {
+        form.append('pageRange', this.customPageRange)
+      }
 
       try {
         const resp = await fetch('/api/print', {
@@ -394,3 +429,14 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.input-error, .select-error {
+  border-color: #ef4444 !important;
+}
+
+.input-error:focus, .select-error:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444 !important;
+}
+</style>

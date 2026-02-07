@@ -15,7 +15,7 @@ import (
 // SendPrintJob sends data to the printer via IPP using goipp to build the
 // IPP Print-Job request. It returns a human-readable status or job identifier
 // when available.
-func SendPrintJob(printerURI string, r io.Reader, mime string, username string, jobName string, sides string, isColor bool) (string, error) {
+func SendPrintJob(printerURI string, r io.Reader, mime string, username string, jobName string, sides string, isColor bool, copies int, pageRange string) (string, error) {
 	// Build IPP Print-Job request
 	req := goipp.NewRequest(goipp.DefaultVersion, goipp.OpPrintJob, 1)
 	req.Operation.Add(goipp.MakeAttribute("attributes-charset", goipp.TagCharset, goipp.String("utf-8")))
@@ -43,6 +43,16 @@ func SendPrintJob(printerURI string, r io.Reader, mime string, username string, 
 		req.Operation.Add(goipp.MakeAttribute("print-color-mode", goipp.TagKeyword, goipp.String("color")))
 	} else {
 		req.Operation.Add(goipp.MakeAttribute("print-color-mode", goipp.TagKeyword, goipp.String("monochrome")))
+	}
+
+	// Add copies attribute
+	if copies > 1 {
+		req.Operation.Add(goipp.MakeAttribute("copies", goipp.TagInteger, goipp.Integer(copies)))
+	}
+
+	// Add page range attribute if specified
+	if pageRange != "" {
+		req.Operation.Add(goipp.MakeAttribute("page-ranges", goipp.TagRange, goipp.String(pageRange)))
 	}
 
 	payload, err := req.EncodeBytes()

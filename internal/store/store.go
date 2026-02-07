@@ -160,6 +160,12 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "is_color INTEGER NOT NULL DEFAULT 1"); err != nil {
 		return fmt.Errorf("migrate: %w", err)
 	}
+	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "copies INTEGER NOT NULL DEFAULT 1"); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "page_range TEXT"); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
 
 	if _, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?), (?, ?), (?, ?)`,
 		SettingPerPageCents, strconv.Itoa(DefaultPerPageCents),
