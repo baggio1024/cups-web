@@ -4,12 +4,12 @@
       <div class="card-body">
         <div class="mb-2"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="col-span-1 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="col-span-1 space-y-3">
             <label class="label">
               <span class="label-text">打印机</span>
             </label>
-            <select v-model="printer" class="select select-bordered w-full" :class="{ 'select-error': !printer || printers.length === 0 }">
+            <select v-model="printer" class="select select-bordered w-full select-sm" :class="{ 'select-error': !printer || printers.length === 0 }">
               <option value="" disabled>请选择打印机</option>
               <option v-for="p in printers" :key="p.uri" :value="p.uri">{{ p.name }} — {{ p.uri }}</option>
             </select>
@@ -17,13 +17,13 @@
               <label class="label">
                 <span class="label-text">文件</span>
               </label>
-              <input type="file" ref="file" @change="onFileChange" class="file-input file-input-bordered w-full" :class="{ 'input-error': !selectedFile && !pdfBlob }" />
+              <input type="file" ref="file" @change="onFileChange" class="file-input file-input-bordered w-full file-input-sm" :class="{ 'input-error': !selectedFile && !pdfBlob }" />
             </div>
             <div>
               <label class="label">
                 <span class="label-text">打印选项</span>
               </label>
-              <select v-model="sides" class="select select-bordered w-full" :class="{ 'select-error': !sides }">
+              <select v-model="sides" class="select select-bordered w-full select-sm" :class="{ 'select-error': !sides }">
                 <option value="">请选择...</option>
                 <option value="one-sided">单面打印</option>
                 <option value="two-sided-long-edge">双面打印（长边翻转）</option>
@@ -34,18 +34,24 @@
               <label class="label">
                 <span class="label-text">打印份数</span>
               </label>
-              <input type="number" v-model.number="copies" min="1" max="100" class="input input-bordered w-full" :class="{ 'input-error': !copies || copies < 1 }" />
+              <input type="number" v-model.number="copies" min="1" max="100" class="input input-bordered w-full input-sm" :class="{ 'input-error': !copies || copies < 1 }" />
             </div>
 
             <div>
               <label class="label">
                 <span class="label-text">打印页面</span>
               </label>
-              <select v-model="pageRange" class="select select-bordered w-full" :class="{ 'select-error': !pageRange }">
+              <select v-model="pageRange" class="select select-bordered w-full select-sm" :class="{ 'select-error': !pageRange || (pageRange !== 'all' && pageRange !== 'custom') }">
                 <option value="all">全部页面</option>
                 <option value="custom">自定义页面范围</option>
               </select>
-              <input v-if="pageRange === 'custom'" type="text" v-model="customPageRange" placeholder="例如: 1-3,5,7-9" class="input input-bordered w-full mt-2" :class="{ 'input-error': pageRange === 'custom' && !customPageRange }" />
+              <input v-if="pageRange === 'custom'" type="text" v-model="customPageRange" placeholder="例如: 1-3,5,7-9" class="input input-bordered w-full mt-1 input-sm" :class="{ 'input-error': pageRange === 'custom' && !customPageRange }" />
+              <div v-if="totalPages > 0" class="text-sm mt-1 p-2 bg-base-200 rounded">
+                <strong>文件总页数: {{ totalPages }} 页</strong>
+              </div>
+              <div v-else-if="calculatingPages" class="text-sm mt-1 p-2 bg-info/10 rounded">
+                正在计算页数...
+              </div>
             </div>
 
             
@@ -54,16 +60,16 @@
               <label class="label">
                 <span class="label-text">颜色模式</span>
               </label>
-              <select v-model="isColor" class="select select-bordered w-full">
+              <select v-model="isColor" class="select select-bordered w-full select-sm">
                 <option :value="false">黑白打印</option>
                 <option :value="true">彩色打印</option>
               </select>
             </div>
 
-            <div class="space-x-2">
-              <button class="btn btn-primary" :disabled="!canPrint || converting" @click="uploadAndPrint">提交</button>
-              <button class="btn" :disabled="!canConvert" @click="convertToPdf">转换</button>
-              <a v-if="previewUrl" :href="previewUrl" :download="downloadName" class="btn btn-ghost">下载预览</a>
+            <div class="space-x-2 mt-2">
+              <button class="btn btn-primary btn-sm" :disabled="!canPrint || converting" @click="uploadAndPrint">打印</button>
+              <button class="btn btn-sm" :disabled="!canConvert" @click="convertToPdf">转换</button>
+              <a v-if="previewUrl" :href="previewUrl" :download="downloadName" class="btn btn-ghost btn-sm">下载预览</a>
             </div>
 
             <div class="text-sm text-muted">{{ msg }}</div>
@@ -82,9 +88,9 @@
                 <img :src="previewUrl" alt="preview" class="max-h-[600px] max-w-full" />
               </div>
               <div v-else-if="previewType === 'pdf'">
-                <iframe :src="previewUrl" style="width:100%; height:600px;" frameborder="0"></iframe>
+                <iframe :src="previewUrl" style="width:100%; height:500px;" frameborder="0"></iframe>
               </div>
-              <div v-else-if="previewType === 'text'" class="p-4 whitespace-pre-wrap overflow-auto h-64">
+              <div v-else-if="previewType === 'text'" class="p-4 whitespace-pre-wrap overflow-auto h-48">
                 {{ textPreview }}
               </div>
               <div v-else class="p-4 text-muted">无预览可用</div>
@@ -127,7 +133,9 @@ export default {
       isColor: false,
       copies: 1,
       pageRange: 'all',
-      customPageRange: ''
+      customPageRange: '',
+      totalPages: 0,
+      calculatingPages: false
     }
   },
   computed: {
@@ -147,6 +155,23 @@ export default {
     }
   },
   async mounted() {
+    // 预加载PDF.js库
+    try {
+      const script = document.createElement('script')
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+      script.onload = () => {
+        // 设置worker
+        window.pdfjsLib = window.pdfjsLib || window.pdf
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions = window.pdfjsLib.GlobalWorkerOptions || {}
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+        }
+      }
+      document.head.appendChild(script)
+    } catch (error) {
+      console.error('Error loading PDF.js:', error)
+    }
+    
     await this.loadProfile()
     try {
       const resp = await fetch('/api/printers', { credentials: 'include' })
@@ -223,19 +248,43 @@ export default {
       this.downloadName = ''
       this.estimate = null
       this.estimating = false
+      this.totalPages = 0
+      this.calculatingPages = false
     },
     onFileChange(e) {
       const f = e.target.files[0]
-      this.clearPreview()
       if (!f) return
+      
+      // 清除之前的预览，但保留页数直到新文件处理完成
+      if (this.previewUrl) {
+        try {
+          URL.revokeObjectURL(this.previewUrl)
+        } catch (e) {
+          // ignore
+        }
+      }
+      this.previewUrl = ''
+      this.previewType = ''
+      this.textPreview = ''
+      this.pdfBlob = null
+      this.converted = false
       this.selectedFile = f
       this.downloadName = f.name.replace(/\.[^/.]+$/, '') + '.pdf'
+      this.estimate = null
+      this.estimating = false
+      this.totalPages = 0 // 重置页数，稍后会更新
 
       if (f.type === 'application/pdf') {
         this.previewUrl = URL.createObjectURL(f)
         this.previewType = 'pdf'
         this.pdfBlob = f
         this.converted = true
+        // 获取PDF页数并立即更新UI
+        this.getPdfPageCount(f).then(count => {
+          this.totalPages = count
+          // 强制Vue更新UI
+          this.$forceUpdate()
+        })
       } else if (f.type.startsWith('image/')) {
         this.previewUrl = URL.createObjectURL(f)
         this.previewType = 'image'
@@ -302,6 +351,13 @@ export default {
         this.previewType = 'pdf'
         this.converted = true
         this.msg = '已准备好转换'
+        
+        // 获取转换后的PDF页数并立即更新UI
+        this.getPdfPageCount(blob).then(count => {
+          this.totalPages = count
+          // 强制Vue更新UI
+          this.$forceUpdate()
+        })
       } catch (e) {
         this.msg = '转换失败: ' + e.message
       } finally {
@@ -369,6 +425,43 @@ export default {
       const lines = doc.splitTextToSize(text || '', 180)
       doc.text(lines, 10, 10)
       return doc.output('blob')
+    },
+    async getPdfPageCount(pdfBlob) {
+      this.calculatingPages = true
+      
+      try {
+        // 使用简单的同步方法获取PDF页数
+        return new Promise((resolve, reject) => {
+          const fileReader = new FileReader()
+          fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result)
+            
+            // 使用pdf.js库来解析PDF并获取页数
+            // 使用全局PDFJS对象，避免动态导入问题
+            if (window.pdfjsLib) {
+              const loadingTask = window.pdfjsLib.getDocument(typedarray)
+              loadingTask.promise.then(pdf => {
+                this.calculatingPages = false
+                resolve(pdf.numPages)
+              }).catch(error => {
+                console.error('Error getting PDF page count:', error)
+                this.calculatingPages = false
+                resolve(0)
+              })
+            } else {
+              // 如果pdf.js未加载，使用备用方法
+              console.warn('PDF.js not loaded, using fallback')
+              this.calculatingPages = false
+              resolve(0)
+            }
+          }
+          fileReader.readAsArrayBuffer(pdfBlob)
+        })
+      } catch (error) {
+        console.error('Error in getPdfPageCount:', error)
+        this.calculatingPages = false
+        return 0
+      }
     },
     async uploadAndPrint() {
       if (!this.printer) { this.msg = '请选择打印机'; return }

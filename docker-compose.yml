@@ -1,6 +1,6 @@
 services:
   cups:
-    image: docker.1ms.run/baggio1024/cups:latest
+    image: docker.1ms.run/anujdatar/cups:latest
     user: root
     environment:
       - CUPSADMIN=${CUPSADMIN}
