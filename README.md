@@ -1,8 +1,7 @@
 # 🖨️ CUPS Web - 网页打印机
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/hanxi/cups-web?style=flat-square&logo=docker)](https://hub.docker.com/r/hanxi/cups-web)
-[![GitHub Stars](https://img.shields.io/github/stars/hanxi/cups-web?style=flat-square&logo=github)](https://github.com/hanxi/cups-web)
-[![License](https://img.shields.io/github/license/hanxi/cups-web?style=flat-square)](LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/hanxi/cups-web?style=flat-square&logo=docker)](https://hub.docker.com/r/baggio1024/cups-web)
+[![GitHub Stars](https://img.shields.io/github/stars/hanxi/cups-web?style=flat-square&logo=github)](https://github.com/baggio1024/cups-web)
 
 这是一个功能完善的网页版打印机管理工具。它允许你通过浏览器远程控制打印机，支持多用户管理、余额充值、打印记录追踪等企业级功能，轻松实现家庭或小型办公室的打印管理需求。
 
@@ -96,7 +95,7 @@ cd cups-web
 ```yaml
 services:
   cups:
-    image: docker.1ms.run/hanxi/cups:latest
+    image: docker.1ms.run/anujdatar/cups:latest
     user: root
     environment:
       - CUPSADMIN=${CUPSADMIN}
@@ -110,7 +109,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: docker.1ms.run/hanxi/cups-web:latest
+    image: docker.1ms.run/baggio1024/cups-web:latest
     user: root
     environment:
       - SESSION_HASH_KEY=${SESSION_HASH_KEY}
@@ -121,16 +120,10 @@ services:
       - ./.data:/data
       - ./.uploads:/uploads
     ports:
-      - "1180:8080"
+      - "8080:8080"
     depends_on:
       - cups
     restart: unless-stopped
-```
-
-或者直接下载：
-
-```bash
-wget https://raw.githubusercontent.com/hanxi/cups-web/main/docker-compose.yml
 ```
 
 ### 3. 配置环境变量
@@ -183,7 +176,7 @@ http://localhost:631
 打开浏览器访问：
 
 ```
-http://localhost:1180
+http://localhost:8080
 ```
 
 **默认管理员账号：**
@@ -215,28 +208,6 @@ http://localhost:1180
 - 查看个人余额和消费记录
 - 查看个人打印历史
 
-### 余额和充值系统
-
-#### 余额机制
-- 每个用户有独立的打印余额账户（单位：分）
-- 打印时根据页数和单页价格自动扣费
-- 余额不足时无法打印
-
-#### 自动充值
-管理员可为用户配置自动充值规则：
-- **每日充值**：每天自动充值指定金额
-- **每月充值**：每月 1 号自动充值
-- **每年充值**：每年 1 月 1 号自动充值
-
-#### 手动充值
-管理员可以随时为用户手动充值，系统会记录充值历史。
-
-#### 消费限额
-可为用户设置：
-- **月度限额**：单月最大打印消费金额
-- **年度限额**：单年最大打印消费金额
-
-超过限额后将无法继续打印，直到下个周期或管理员调整限额。
 
 ### 打印功能
 
@@ -302,18 +273,6 @@ http://localhost:1180
 - 可删除普通用户
 - 默认管理员账号（admin）受保护，无法删除
 
-#### 充值管理
-
-**手动充值：**
-1. 在用户列表中找到目标用户
-2. 点击"充值"按钮
-3. 输入充值金额（单位：分）
-4. 确认充值
-
-**查看充值记录：**
-- 可查看所有用户的充值历史
-- 包括手动充值和自动充值记录
-- 显示充值时间、金额、操作员等信息
 
 #### 打印记录查询
 
@@ -361,7 +320,7 @@ http://localhost:1180
 默认的 `docker-compose.yml` 配置：
 
 - **CUPS 服务端口**：`631`（用于管理打印机）
-- **Web 服务端口**：`1180`（用于访问 Web 界面）
+- **Web 服务端口**：`8080`（用于访问 Web 界面）
 - **数据持久化**：
   - `./.data`：数据库文件
   - `./.uploads`：上传的文件
