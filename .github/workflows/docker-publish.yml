@@ -8,38 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-cups:
-    name: Build and push baggio1024/cups
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push baggio1024/cups (multi-arch)
-        uses: docker/build-push-action@v4
-        with:
-          context: ./cups
-          file: ./cups/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            baggio1024/cups:latest
-            baggio1024/cups:${{ github.ref_name }}
-          cache-from: type=gha,scope=cups
-          cache-to: type=gha,scope=cups,mode=max
-
   build-cups-web:
     name: Build and push baggio1024/cups-web
     runs-on: ubuntu-latest
@@ -76,10 +44,8 @@ jobs:
     name: Output pushed image refs
     runs-on: ubuntu-latest
     needs:
-      - build-cups
       - build-cups-web
     steps:
       - name: Output pushed image refs
         run: |
-          echo "Pushed baggio1024/cups:latest and baggio1024/cups:${{ github.ref_name }}"
           echo "Pushed baggio1024/cups-web:latest and baggio1024/cups-web:${{ github.ref_name }}"
