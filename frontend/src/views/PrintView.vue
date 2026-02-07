@@ -13,7 +13,6 @@
               <option value="" disabled>请选择打印机</option>
               <option v-for="p in printers" :key="p.uri" :value="p.uri">{{ p.name }} — {{ p.uri }}</option>
             </select>
-
             <div>
               <label class="label">
                 <span class="label-text">文件</span>
