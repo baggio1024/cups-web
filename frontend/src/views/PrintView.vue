@@ -3,7 +3,6 @@
     <div class="card bg-base-100 shadow">
       <div class="card-body">
         <div class="mb-2"></div>
-
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="col-span-1 space-y-3">
             <label class="label">

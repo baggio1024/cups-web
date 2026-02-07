@@ -12,7 +12,6 @@ services:
     volumes:
       - ./.etc:/etc/cups
     restart: unless-stopped
-
   web:
     image: docker.1ms.run/baggio1024/cups-web:latest
     user: root
