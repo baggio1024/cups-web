@@ -24,7 +24,6 @@ FROM debian:bookworm-slim AS runtime
 ENV TZ Asia/Shanghai
 RUN ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime
 RUN echo ${TZ} > /etc/timezone
-
 # Install LibreOffice (headless conversion) and minimal fonts/certificates
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress openjdk-17-jre \
