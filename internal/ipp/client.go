@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
 	goipp "github.com/OpenPrinting/goipp"
@@ -51,8 +52,22 @@ func SendPrintJob(printerURI string, r io.Reader, mime string, username string, 
 	}
 
 	// Add page range attribute if specified
-	if pageRange != "" {
-		req.Operation.Add(goipp.MakeAttribute("page-ranges", goipp.TagRange, goipp.String(pageRange)))
+	if pageRange != "" && pageRange != "all" {
+		// Parse page range if it contains hyphens (e.g., "1-5" or "2,4,6")
+		if strings.Contains(pageRange, "-") || strings.Contains(pageRange, ",") {
+			// For range values like "1-5" or "2,4,6", we need to parse them
+			// and create appropriate IPP range objects
+			req.Operation.Add(goipp.MakeAttribute("page-ranges", goipp.TagText, goipp.String(pageRange)))
+		} else {
+			// If it's a simple string like "all", don't add the attribute
+			// For individual page numbers, parse them as integers
+			if pageNum, err := strconv.Atoi(pageRange); err == nil {
+				req.Operation.Add(goipp.MakeAttribute("page-ranges", goipp.TagInteger, goipp.Integer(pageNum)))
+			} else {
+				// For other string formats, use TagText instead of TagRange
+				req.Operation.Add(goipp.MakeAttribute("page-ranges", goipp.TagText, goipp.String(pageRange)))
+			}
+		}
 	}
 
 	payload, err := req.EncodeBytes()
