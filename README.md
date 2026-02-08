@@ -20,16 +20,6 @@
       <b>打印机列表</b>
     </td>
   </tr>
-  <tr>
-    <td align="center">
-      <img src="screenshots/print2.png" width="400" alt="文件上传"><br/>
-      <b>文件上传</b>
-    </td>
-    <td align="center">
-      <img src="screenshots/admin.png" width="400" alt="管理后台"><br/>
-      <b>管理后台</b>
-    </td>
-  </tr>
 </table>
 
 </div>
@@ -44,28 +34,6 @@
   - Office 文档（docx、xlsx、pptx 等）自动转换为 PDF（基于 LibreOffice）
   - 文本文件（txt）自动转换为 PDF
 
-### 用户管理
-- **多用户系统**：支持管理员和普通用户两种角色
-- **余额管理**：每个用户独立的打印余额账户
-- **自动充值**：支持每日/每月/每年自动充值
-- **消费限额**：可设置月度和年度打印消费限额
-- **打印记录**：完整的打印历史记录和费用追踪
-
-### 管理后台
-- **用户管理**：创建、编辑、删除用户账号
-- **充值管理**：为用户手动充值，查看充值记录
-- **打印记录查询**：按用户、时间范围查询打印记录
-- **系统设置**：配置单页打印价格、数据保留天数等
-
-### 安全特性
-- **Session 认证**：安全的会话管理机制
-- **CSRF 保护**：防止跨站请求伪造攻击
-- **密码加密**：使用 bcrypt 加密存储用户密码
-
-### 部署优势
-- **Docker 一键部署**：使用 Docker Compose 快速启动
-- **数据持久化**：数据库和上传文件独立存储
-- **易于维护**：简洁的配置和管理界面
 
 ## 🛠️ 技术栈
 
@@ -185,29 +153,6 @@ http://localhost:8080
 
 **⚠️ 重要**：首次登录后请立即修改默认密码！
 
-### 7. 开始使用
-
-1. 使用管理员账号登录
-2. 在管理后台创建普通用户账号
-3. 为用户设置初始余额和充值规则
-4. 用户即可登录并开始打印
-
-## 📖 详细使用指南
-
-### 用户角色说明
-
-#### 管理员（Admin）
-- 管理所有用户账号
-- 为用户充值
-- 查看所有打印记录
-- 配置系统设置（单页价格、数据保留等）
-- 访问管理后台
-
-#### 普通用户（User）
-- 上传并打印文件
-- 查看个人余额和消费记录
-- 查看个人打印历史
-
 
 ### 打印功能
 
@@ -227,17 +172,7 @@ http://localhost:8080
 3. **预览和转换**：
    - PDF 和图片可直接预览
    - Office 文档可点击"转换"按钮预览转换后的 PDF
-4. **查看费用估算**：系统自动显示预估页数和费用
-5. **确认打印**：点击"打印"按钮提交打印任务
-
-#### 费用计算
-
-```
-打印费用 = 页数 × 单页价格
-```
-
-- 单页价格由管理员在系统设置中配置
-- 默认单页价格：10 分（0.1 元）
+4. **确认打印**：点击"打印"按钮提交打印任务
 
 #### 打印记录
 
@@ -282,15 +217,7 @@ http://localhost:8080
 - 按时间范围筛选
 - 导出打印记录（查看详细信息）
 
-#### 系统设置
 
-**单页价格：**
-- 设置每页打印的费用（单位：分）
-- 影响所有后续打印任务的费用计算
-
-**数据保留天数：**
-- 设置打印记录和上传文件的保留时间
-- 超过保留期的数据会被自动清理
 
 ## ⚙️ 配置说明
 
@@ -357,7 +284,7 @@ server {
     ssl_certificate_key /path/to/key.pem;
 
     location / {
-        proxy_pass http://localhost:1180;
+        proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -471,244 +398,3 @@ docker-compose logs -f cups
 3. 添加新打印机
 4. 在 Web 界面刷新打印机列表
 
-## 📝 更新日志
-
-查看 [Releases](https://github.com/hanxi/cups-web/releases) 了解版本更新历史。
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📄 许可证
-
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
-
-**编辑用户：**
-- 可修改用户的所有信息（除用户名外）
-- 可调整余额、充值规则和限额
-
-**删除用户：**
-- 可删除普通用户
-- 默认管理员账号（admin）受保护，无法删除
-
-#### 充值管理
-
-**手动充值：**
-1. 在用户列表中找到目标用户
-2. 点击"充值"按钮
-3. 输入充值金额（单位：分）
-4. 确认充值
-
-**查看充值记录：**
-- 可查看所有用户的充值历史
-- 包括手动充值和自动充值记录
-- 显示充值时间、金额、操作员等信息
-
-#### 打印记录查询
-
-管理员可以：
-- 查看所有用户的打印记录
-- 按用户名筛选
-- 按时间范围筛选
-- 导出打印记录（查看详细信息）
-
-#### 系统设置
-
-**单页价格：**
-- 设置每页打印的费用（单位：分）
-- 影响所有后续打印任务的费用计算
-
-**数据保留天数：**
-- 设置打印记录和上传文件的保留时间
-- 超过保留期的数据会被自动清理
-
-## ⚙️ 配置说明
-
-### 环境变量详解
-
-#### Web 服务配置
-
-| 变量名 | 说明 | 默认值 | 必填 |
-|--------|------|--------|------|
-| `LISTEN_ADDR` | Web 服务监听地址 | `:8080` | 否 |
-| `DB_PATH` | SQLite 数据库文件路径 | `/data/cups-web.db` | 否 |
-| `UPLOAD_DIR` | 上传文件存储目录 | `/uploads` | 否 |
-| `CUPS_HOST` | CUPS 服务地址 | `localhost` | 否 |
-| `SESSION_HASH_KEY` | Session 加密哈希密钥 | - | **是** |
-| `SESSION_BLOCK_KEY` | Session 加密块密钥 | - | **是** |
-| `SESSION_SECURE` | 是否启用 HTTPS Cookie | `false` | 否 |
-
-#### CUPS 服务配置
-
-| 变量名 | 说明 | 默认值 | 必填 |
-|--------|------|--------|------|
-| `CUPSADMIN` | CUPS 管理员用户名 | - | **是** |
-| `CUPSPASSWORD` | CUPS 管理员密码 | - | **是** |
-
-### Docker Compose 配置
-
-默认的 `docker-compose.yml` 配置：
-
-- **CUPS 服务端口**：`631`（用于管理打印机）
-- **Web 服务端口**：`1180`（用于访问 Web 界面）
-- **数据持久化**：
-  - `./.data`：数据库文件
-  - `./.uploads`：上传的文件
-  - `./.etc`：CUPS 配置文件
-
-### 修改端口
-
-如需修改端口，编辑 `docker-compose.yml`：
-
-```yaml
-services:
-  web:
-    ports:
-      - "你的端口:8080"  # 修改左侧端口号
-```
-
-## 🔧 高级配置
-
-### 使用 HTTPS
-
-1. 在 `.env` 中设置：
-```bash
-SESSION_SECURE=true
-```
-
-2. 配置反向代理（如 Nginx）处理 HTTPS：
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name your-domain.com;
-
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-
-    location / {
-        proxy_pass http://localhost:1180;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### 数据备份
-
-定期备份以下目录：
-
-```bash
-# 备份数据库
-cp ./.data/cups-web.db /backup/location/
-
-# 备份上传文件
-tar -czf uploads-backup.tar.gz ./.uploads/
-
-# 备份 CUPS 配置
-tar -czf cups-config-backup.tar.gz ./.etc/
-```
-
-### 性能优化
-
-对于大量用户场景，建议：
-
-1. 增加 Docker 容器资源限制
-2. 定期清理过期的打印记录和文件
-3. 使用 SSD 存储数据库文件
-
-## ⚠️ 注意事项
-
-### 安全建议
-
-1. **修改默认密码**：首次部署后立即修改 admin 账号密码
-2. **使用强密钥**：确保 `SESSION_HASH_KEY` 和 `SESSION_BLOCK_KEY` 足够随机和复杂
-3. **启用 HTTPS**：生产环境建议使用 HTTPS 保护数据传输
-4. **定期备份**：定期备份数据库和上传文件
-5. **限制访问**：使用防火墙限制只有授权 IP 可以访问
-
-### 打印机驱动
-
-- CUPS 容器中可能没有预装所有打印机驱动
-- 建议根据打印机型号手动安装对应驱动
-- 可以通过 `docker exec` 进入 CUPS 容器安装驱动
-
-### LibreOffice 转换
-
-- Web 镜像已预装 LibreOffice 和常用字体
-- 支持中文字体（Noto CJK、文泉驿等）
-- 转换超时时间为 60 秒
-- 复杂文档可能需要较长转换时间
-
-### 数据清理
-
-- 系统会根据"数据保留天数"设置自动清理过期数据
-- 清理包括：打印记录和对应的上传文件
-- 建议根据存储空间合理设置保留天数
-
-## ❓ 常见问题
-
-### 如何重置管理员密码？
-
-如果忘记管理员密码，可以通过以下方式重置：
-
-```bash
-# 停止服务
-docker-compose down
-
-# 删除数据库（会清空所有数据）
-rm ./.data/cups-web.db
-
-# 重新启动服务（会创建新的 admin/admin 账号）
-docker-compose up -d
-```
-
-### 打印机无法识别怎么办？
-
-1. 确认打印机已正确连接到服务器
-2. 访问 CUPS 管理界面（http://localhost:631）检查打印机状态
-3. 尝试重启 CUPS 服务：`docker-compose restart cups`
-4. 检查打印机驱动是否正确安装
-
-### Office 文档转换失败？
-
-可能的原因：
-1. 文档格式损坏或不支持
-2. 文档过大或过于复杂
-3. LibreOffice 转换超时
-
-解决方法：
-1. 尝试在本地用 Office 或 LibreOffice 打开并另存为
-2. 将文档手动转换为 PDF 后再上传
-3. 简化文档内容
-
-### 如何查看服务日志？
-
-```bash
-# 查看 Web 服务日志
-docker-compose logs -f web
-
-# 查看 CUPS 服务日志
-docker-compose logs -f cups
-```
-
-### 如何更换打印机？
-
-1. 访问 CUPS 管理界面（http://localhost:631）
-2. 删除旧打印机
-3. 添加新打印机
-4. 在 Web 界面刷新打印机列表
-
-## 📝 更新日志
-
-查看 [Releases](https://github.com/hanxi/cups-web/releases) 了解版本更新历史。
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📄 许可证
-
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
