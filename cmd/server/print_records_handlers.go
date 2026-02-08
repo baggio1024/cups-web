@@ -32,6 +32,10 @@ type printRecordResponse struct {
 	Status             string `json:"status"`
 	IsDuplex           bool   `json:"isDuplex"`
 	IsColor            bool   `json:"isColor"`
+	Duplex             string `json:"duplex"`
+	Sides              string `json:"sides"`
+	Copies             int    `json:"copies"`
+	PageRange          string `json:"pageRange"`
 	CreatedAt          string `json:"createdAt"`
 }
 
@@ -185,6 +189,18 @@ func mapPrintRecords(records []store.PrintRecord) []printRecordResponse {
 		if rec.JobID.Valid {
 			jobID = rec.JobID.String
 		}
+		duplex := ""
+		if rec.Duplex.Valid {
+			duplex = rec.Duplex.String
+		}
+		sides := ""
+		if rec.Sides.Valid {
+			sides = rec.Sides.String
+		}
+		pageRange := ""
+		if rec.PageRange.Valid {
+			pageRange = rec.PageRange.String
+		}
 		resp = append(resp, printRecordResponse{
 			ID:                 rec.ID,
 			UserID:             rec.UserID,
@@ -201,6 +217,10 @@ func mapPrintRecords(records []store.PrintRecord) []printRecordResponse {
 			Status:             rec.Status,
 			IsDuplex:           rec.IsDuplex,
 			IsColor:            rec.IsColor,
+			Duplex:             duplex,
+			Sides:              sides,
+			Copies:             rec.Copies,
+			PageRange:          pageRange,
 			CreatedAt:          rec.CreatedAt,
 		})
 	}

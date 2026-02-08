@@ -13,12 +13,12 @@
           <input class="input input-bordered" v-model="form.contactName" placeholder="联系人" />
           <input class="input input-bordered" v-model="form.phone" placeholder="联系电话" />
           <input class="input input-bordered" v-model="form.email" placeholder="邮箱" />
-          <input class="input input-bordered" type="number" step="0.01" v-model="form.dailyTopup" placeholder="每日自动充值" />
-          <input class="input input-bordered" type="number" step="0.01" v-model="form.monthlyTopup" placeholder="每月自动充值" />
-          <input class="input input-bordered" type="number" step="0.01" v-model="form.yearlyTopup" placeholder="每年自动充值" />
-          <input class="input input-bordered" type="number" step="0.01" v-model="form.monthlyLimit" placeholder="月度最高消耗" />
-          <input class="input input-bordered" type="number" step="0.01" v-model="form.yearlyLimit" placeholder="年度最高消耗" />
-          <input class="input input-bordered" type="number" step="0.01" v-model="form.balance" :disabled="isEditing" placeholder="初始余额" />
+          <input class="input input-bordered hidden" type="number" step="0.01" v-model="form.dailyTopup" placeholder="每日自动充值" />
+          <input class="input input-bordered hidden" type="number" step="0.01" v-model="form.monthlyTopup" placeholder="每月自动充值" />
+          <input class="input input-bordered hidden" type="number" step="0.01" v-model="form.yearlyTopup" placeholder="每年自动充值" />
+          <input class="input input-bordered hidden" type="number" step="0.01" v-model="form.monthlyLimit" placeholder="月度最高消耗" />
+          <input class="input input-bordered hidden" type="number" step="0.01" v-model="form.yearlyLimit" placeholder="年度最高消耗" />
+          <input class="input input-bordered hidden" type="number" step="0.01" v-model="form.balance" :disabled="isEditing" placeholder="初始余额" />
           <div class="flex gap-2">
             <button class="btn btn-primary" type="submit">{{ isEditing ? '保存' : '新增用户' }}</button>
             <button class="btn btn-ghost" type="button" @click="resetForm">重置</button>
@@ -36,11 +36,11 @@
               <th>联系人</th>
               <th>电话</th>
               <th>邮箱</th>
-              <th>余额</th>
-              <th>自动充值</th>
-              <th>限额</th>
+              <th class="hidden">余额</th>
+              <th class="hidden">自动充值</th>
+              <th class="hidden">限额</th>
               <th>操作</th>
-              <th>手动充值</th>
+              <th class="hidden">手动充值</th>
             </tr>
           </thead>
           <tbody>
@@ -51,13 +51,13 @@
               <td>{{ u.contactName || '-' }}</td>
               <td>{{ u.phone || '-' }}</td>
               <td>{{ u.email || '-' }}</td>
-              <td>{{ formatCents(u.balanceCents) }}</td>
-              <td>
+              <td class="hidden">{{ formatCents(u.balanceCents) }}</td>
+              <td class="hidden">
                 日 {{ formatCents(u.dailyTopupCents) }} /
                 月 {{ formatCents(u.monthlyTopupCents) }} /
                 年 {{ formatCents(u.yearlyTopupCents) }}
               </td>
-              <td>
+              <td class="hidden">
                 月 {{ u.monthlyLimitCents ? formatCents(u.monthlyLimitCents) : '未设置' }} /
                 年 {{ u.yearlyLimitCents ? formatCents(u.yearlyLimitCents) : '未设置' }}
               </td>
@@ -65,7 +65,7 @@
                 <button class="btn btn-xs btn-ghost" @click="editUser(u)">编辑</button>
                 <button class="btn btn-xs btn-outline btn-error" :disabled="u.username === 'admin'" @click="deleteUser(u)">删除</button>
               </td>
-              <td class="space-x-2">
+              <td class="hidden space-x-2">
                 <input class="input input-bordered input-xs w-24" type="number" step="0.01" v-model="topupAmounts[u.id]" placeholder="金额" />
                 <button class="btn btn-xs btn-primary" @click="topupUser(u)">充值</button>
               </td>
@@ -92,19 +92,25 @@
               <th>时间</th>
               <th>用户</th>
               <th>文件</th>
-              <th>页数</th>
-              <th>费用</th>
+            <th>文件页数</th>
+            <th>颜色</th>
+            <th>单面/双面</th>
+            <th>打印份数</th>
+            <th>打印页码</th>
               <th>状态</th>
               <th>下载</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="rec in printRecords" :key="rec.id">
-              <td>{{ rec.createdAt }}</td>
+              <td>{{ formatDate(rec.createdAt) }}</td>
               <td>{{ rec.username }}</td>
               <td>{{ rec.filename }}</td>
               <td>{{ rec.pages }}</td>
-              <td>{{ formatCents(rec.costCents) }}</td>
+              <td>{{ rec.isColor ? '彩色' : '黑白' }}</td>
+            <td>{{ rec.duplex }}</td>
+            <td>{{ rec.copies }}</td>
+            <td>{{ rec.pageRange }}</td>
               <td>{{ rec.status }}</td>
               <td>
                 <a class="link" :href="`/api/print-records/${rec.id}/file`" target="_blank">下载</a>
@@ -115,7 +121,7 @@
       </div>
     </div>
 
-    <div class="card bg-base-100 shadow">
+    <div class="card bg-base-100 shadow hidden">
       <div class="card-body">
         <h2 class="card-title">充值记录</h2>
         <div class="flex flex-wrap gap-3 items-end">
@@ -157,13 +163,13 @@
       <div class="card-body">
         <h2 class="card-title">系统设置</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-          <label class="form-control">
+          <label class="form-control hidden">
             <div class="label">
               <span class="label-text">黑白打印单页价格（元/页）</span>
             </div>
             <input class="input input-bordered" type="number" step="0.01" v-model="settings.perPage" placeholder="例如 0.10" />
           </label>
-          <label class="form-control">
+          <label class="form-control hidden">
             <div class="label">
               <span class="label-text">彩色打印单页价格（元/页）</span>
             </div>
@@ -234,6 +240,12 @@ export default {
     formatCents(value) {
       const cents = Number.isFinite(value) ? value : 0
       return (cents / 100).toFixed(2)
+    },
+    formatDate(dateString) {
+      if (!dateString) return '';
+      // 将UTC时间转换为本地时间显示
+      const date = new Date(dateString);
+      return date.toLocaleString();
     },
     toCents(value) {
       const num = parseFloat(String(value).replace(',', '.'))

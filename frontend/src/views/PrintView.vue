@@ -42,17 +42,20 @@
               </label>
               <select v-model="pageRange" class="select select-bordered w-full select-sm" :class="{ 'select-error': !pageRange || (pageRange !== 'all' && pageRange !== 'custom') }">
                 <option value="all">全部页面</option>
-                <option value="custom">自定义页面范围</option>
+                <option value="custom" :disabled="totalPages <= 0">自定义页面范围</option>
               </select>
               <input v-if="pageRange === 'custom'" type="text" v-model="customPageRange" placeholder="例如: 1-3,5,7-9" class="input input-bordered w-full mt-1 input-sm" :class="{ 'input-error': pageRange === 'custom' && !customPageRange }" />
               <div v-if="totalPages > 0" class="text-sm mt-1 p-2 bg-base-200 rounded">
                 <strong>文件总页数: {{ totalPages }} 页</strong>
               </div>
-              <div v-else-if="selectedFile && !pdfBlob" class="text-sm mt-1 p-2 bg-warning/10 rounded">
-                文件转换后才能计算页数
+              <div v-else-if="selectedFile && !pdfBlob" class="text-sm mt-1 p-2 bg-warning/10 rounded text-warning-content">
+                <span class="text-warning">⚠️ office文件转换后才能预览、自定义打印页码范围</span>
               </div>
               <div v-else-if="calculatingPages" class="text-sm mt-1 p-2 bg-info/10 rounded">
                 正在计算页数...
+              </div>
+              <div v-if="totalPages <= 0 && pageRange === 'custom'" class="text-sm mt-1 p-1 text-warning font-bold">
+                ⚠️ 注意：需要先计算页数才能选择自定义页面范围
               </div>
             </div>
 
@@ -74,7 +77,7 @@
               <a v-if="previewUrl" :href="previewUrl" :download="downloadName" class="btn btn-ghost btn-sm">下载预览</a>
             </div>
 
-            <div class="text-sm text-muted">{{ msg }}</div>
+            <div v-if="msg" :class="{'alert alert-warning': msg.includes('⚠️ 自定义页面范围超出文件总页数限制'), 'text-sm text-muted': true}">{{ msg }}</div>
 
             <div class="mt-4">
               <label class="label"><span class="label-text">转换状态</span></label>
@@ -165,7 +168,9 @@ export default {
         // 设置worker
         window.pdfjsLib = window.pdfjsLib || window.pdf
         if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions = window.pdfjsLib.GlobalWorkerOptions || {}
+          if (!window.pdfjsLib.GlobalWorkerOptions) {
+            window.pdfjsLib.GlobalWorkerOptions = {}
+          }
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
         }
       }
@@ -477,7 +482,14 @@ export default {
       if (!this.sides) { this.msg = '请选择打印选项'; return }
       if (!this.copies || this.copies < 1) { this.msg = '请输入有效的打印份数'; return }
       if (!this.pageRange || (this.pageRange !== 'all' && this.pageRange !== 'custom')) { this.msg = '请选择打印页面范围'; return }
-      if (this.pageRange === 'custom' && !this.customPageRange) { this.msg = '请输入自定义页面范围'; return }
+        if (this.pageRange === 'custom' && this.totalPages <= 0) { this.msg = '需要先计算页数才能选择自定义页面范围'; return }
+        if (this.pageRange === 'custom' && !this.customPageRange) { this.msg = '请输入自定义页面范围'; return }
+        if (this.pageRange === 'custom' && this.customPageRange && this.totalPages > 0) {
+          if (this.validatePageRange(this.customPageRange, this.totalPages)) {
+            this.msg = `⚠️ 自定义页面范围超出文件总页数限制(${this.totalPages}页)`;
+            return;
+          }
+        }
       if (!this.selectedFile && !this.pdfBlob) { this.msg = '请选择要打印的文件'; return }
       let fileToSend = null
       let filename = ''
@@ -526,6 +538,33 @@ export default {
       } catch (e) {
         this.msg = e.message
       }
+    },
+    validatePageRange(range, totalPages) {
+      // 检查页码范围是否超出文件总页数
+      if (!range || totalPages <= 0) {
+        return false;
+      }
+      
+      // 解析页码范围，支持格式如: "1-3,5,7-9" 或 "1,2,3" 或 "5-10"
+      const parts = range.split(',').map(part => part.trim());
+      
+      for (const part of parts) {
+        if (part.includes('-')) {
+          // 处理范围格式如 "1-5"
+          const [start, end] = part.split('-').map(Number);
+          if (isNaN(start) || isNaN(end) || start < 1 || end > totalPages || start > end) {
+            return true; // 返回true表示有错误
+          }
+        } else {
+          // 处理单个页码如 "5"
+          const pageNum = Number(part);
+          if (isNaN(pageNum) || pageNum < 1 || pageNum > totalPages) {
+            return true; // 返回true表示有错误
+          }
+        }
+      }
+      
+      return false; // 返回false表示验证通过
     }
   }
 }

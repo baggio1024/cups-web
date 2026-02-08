@@ -142,6 +142,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			is_duplex INTEGER NOT NULL DEFAULT 0,
 			is_color INTEGER NOT NULL DEFAULT 1,
 			created_at TEXT NOT NULL,
+			print_content TEXT,
 			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
 	}
@@ -164,6 +165,12 @@ func (s *Store) migrate(ctx context.Context) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "page_range TEXT"); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "sides TEXT"); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+	if err := addColumnIfMissing(ctx, s.DB, "print_jobs", "duplex TEXT"); err != nil {
 		return fmt.Errorf("migrate: %w", err)
 	}
 

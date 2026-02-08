@@ -216,8 +216,10 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 			Status:             "queued",
 			IsDuplex:           isDuplex,
 			IsColor:            isColor,
+			Duplex:             sql.NullString{String: getDuplexDisplayText(sides), Valid: getDuplexDisplayText(sides) != ""},
+			Sides:              sql.NullString{String: sides, Valid: sides != ""},
 			Copies:             copies,
-			PageRange:          pageRange,
+			PageRange:          sql.NullString{String: pageRange, Valid: pageRange != ""},
 			CreatedAt:          time.Now().UTC().Format(time.RFC3339),
 		}
 		id, err := store.InsertPrintRecord(r.Context(), tx, &rec)
@@ -279,3 +281,26 @@ func printHandler(w http.ResponseWriter, r *http.Request) {
 		IsColor:         isColor,
 	})
 }
+
+func getDuplexDisplayText(sides string) string {
+	switch sides {
+	case "one-sided":
+		return "单面打印"
+	case "two-sided-long-edge":
+		return "双面打印（长边翻转）"
+	case "two-sided-short-edge":
+		return "双面打印（短边翻转）"
+	default:
+		if strings.Contains(sides, "one") {
+			return "单面打印"
+		} else if strings.Contains(sides, "two") {
+			if strings.Contains(sides, "short") {
+				return "双面打印（短边翻转）"
+			} else {
+				return "双面打印（长边翻转）"
+			}
+		}
+		return "单面打印" // default
+	}
+}
+
