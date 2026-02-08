@@ -1,7 +1,7 @@
 # 🖨️ CUPS Web - 网页打印机
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/hanxi/cups-web?style=flat-square&logo=docker)](https://hub.docker.com/r/baggio1024/cups-web)
-[![GitHub Stars](https://img.shields.io/github/stars/hanxi/cups-web?style=flat-square&logo=github)](https://github.com/baggio1024/cups-web)
+[![Docker Pulls](https://img.shields.io/docker/pulls/baggio1024/cups-web?style=flat-square&logo=docker)](https://hub.docker.com/r/baggio1024/cups-web)
+[![GitHub Stars](https://img.shields.io/github/stars/baggio1024/cups-web?style=flat-square&logo=github)](https://github.com/baggio1024/cups-web)
 
 这是一个自用的网页版打印机管理工具。它允许你通过浏览器远程控制打印机，支持多用户管理、打印记录追踪等功能，轻松实现家庭或小型办公室的打印管理需求。
 
@@ -189,24 +189,13 @@ http://localhost:8080
 #### 用户管理
 
 **创建用户：**
-1. 进入管理后台
-2. 点击"创建用户"
-3. 填写用户信息：
-   - 用户名（必填）
-   - 密码（必填）
-   - 角色（管理员/普通用户）
-   - 联系信息（可选）
-   - 初始余额
-   - 自动充值规则
-   - 消费限额
+
 
 **编辑用户：**
-- 可修改用户的所有信息（除用户名外）
-- 可调整余额、充值规则和限额
+
 
 **删除用户：**
-- 可删除普通用户
-- 默认管理员账号（admin）受保护，无法删除
+
 
 
 #### 打印记录查询
