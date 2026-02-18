@@ -12,11 +12,11 @@
 <table>
   <tr>
     <td align="center">
-      <img src="screenshots/login.png" width="400" alt="登录认证"><br/>
+      <img src="https://github.com/baggio1024/cups-web/raw/master/screenshots/login.png" width="400" alt="登录认证"><br/>
       <b>登录认证</b>
     </td>
     <td align="center">
-      <img src="screenshots/print1.png" width="400" alt="打印机列表"><br/>
+      <img src="https://github.com/baggio1024/cups-web/raw/master/screenshots/print1.png" width="400" alt="打印机列表"><br/>
       <b>打印机列表</b>
     </td>
   </tr>
