@@ -202,7 +202,6 @@ const login = async () => {
       loading.value = false
       return
     }
-
     emit('login-success')
   } catch (e) {
     error.value = `系统异常: ${e.message}`
